@@ -36,7 +36,7 @@ But will not accept the following:
 
     set alarm
     set loud alarm at
-    set alarm at 2
+    set alarm at pm
     ...
 
 For more details on how to process the matched call check out the [example](example.py).
