@@ -1,4 +1,4 @@
-from typing import Iterator, Optional
+from typing import Iterable, Optional
 from .utils import StrBuffer
 
 
@@ -6,8 +6,9 @@ class CallLexer:
     def __init__(self, delims='"\''):
         self.delims = delims
 
-    def tokenize(self, cmd: str) -> Iterator[str]:
+    def tokenize(self, cmd: str) -> Iterable[str]:
         current = StrBuffer()
+        escape = False
         delim = None  # type: Optional[str]
 
         for c in cmd + ' ':
@@ -18,8 +19,17 @@ class CallLexer:
                     else:
                         yield current.flush()
             
+            elif c == '\\':
+                if escape:
+                    current += c
+                escape = not escape
+
             elif c in self.delims:
-                if delim is None:
+                if escape:
+                    current += c
+                    escape = False
+
+                elif delim is None:
                     delim = c
                 elif c == delim:
                     yield current.flush()

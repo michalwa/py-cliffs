@@ -19,3 +19,23 @@ class StrBuffer:
             self._buffer == other,
             isinstance(other, self.__class__) and self._buffer == other._buffer
         ])
+
+
+def loose_bool(s: str) -> bool:
+    try:
+        f = float(s)
+        if f == 1:
+            return True
+        elif f == 0:
+            return False
+    except:
+        pass
+
+    s = s.lower()
+    if s in ['y', 'yes', 't', 'true', 'do', 'ok', 'sure', 'alright']:
+        return True
+    elif s in ['n', 'no', 'f', 'false', 'dont']:
+        return False
+        
+    else:
+        raise ValueError(f"String '{s}' cannot be loosely casted to a boolean")

@@ -6,18 +6,57 @@ class SyntaxParser:
         root = StSequence()
         current = root  # type: StBranch
 
+        state = 'NORMAL'
+        param_name = None
+        param_type = None
+
         for token_type, token_value in tokens:
 
-            # Literals & params
+            # Literals
             if token_type == 'literal':
-                current.append_child(StLiteral(token_value))
-            elif token_type == 'param':
-                current.append_child(StParam(token_value))
+
+                # Literals serve both as parameter names and type specifiers
+                if state == 'PARAM_NAME':
+                    if param_name is not None:
+                        raise SyntaxError(f"Unexpected literal '{token_value}'")
+                    param_name = token_value
+                elif state == 'PARAM_TYPE':
+                    if param_type is not None:
+                        raise SyntaxError(f"Unexpected literal '{token_value}'")
+                    param_type = token_value
+
+                # Regular literal
+                else:
+                    current.append_child(StLiteral(token_value))
 
             elif token_type == 'delim':
 
+                # Opening parameter delimiter
+                if token_value == '<':
+                    if state != 'NORMAL':
+                        raise SyntaxError("Unexpected parameter opening delimiter '<'")
+                    state = 'PARAM_NAME'
+
+                # Parameter type specifier separator
+                elif token_value == ':':
+                    if state != 'PARAM_NAME' or param_name is None:
+                        raise SyntaxError("Unexpected parameter type separator ':'")
+                    state = 'PARAM_TYPE'
+
+                # Closing parameter delimiter
+                elif token_value == '>':
+                    if state != 'PARAM_NAME' and state != 'PARAM_TYPE':
+                        raise SyntaxError("Unexpected parameter closing delimiter '>'")
+                    if param_name is None:
+                        raise SyntaxError('Empty parameter name')
+
+                    current.append_child(StParam(param_name, param_type))
+                    param_name = None
+                    param_type = None
+                    state = 'NORMAL'
+
                 # Opening optional sequence delimiter
-                if token_value == '[':
+                elif token_value == '[':
                     child = StOptSequence()  # type: StBranch
                     current.append_child(child)
                     current = child
@@ -25,7 +64,7 @@ class SyntaxParser:
                 # Closing optional sequence delimiter
                 elif token_value == ']':
                     if not isinstance(current, StOptSequence):
-                        raise SyntaxError("Unmatched optional sequence closing delimiter ']'")
+                        raise SyntaxError("Unexpected optional sequence closing delimiter ']'")
                     if current.num_children() == 0:
                         raise SyntaxError('Empty optional sequence')
 

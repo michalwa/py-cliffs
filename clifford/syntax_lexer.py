@@ -1,51 +1,27 @@
-from typing import Iterator, Tuple
+from typing import Iterable, Tuple
 from .utils import StrBuffer
 
 
 class SyntaxLexer:
-    def tokenize(self, spec: str) -> Iterator[Tuple[str, str]]:
-        current = StrBuffer()  # the current token being accumulated
-        end = False            # whether a delimiter occured while parsing the current token
-        parsing_param = False  # whether parsing a parameter
+    def tokenize(self, spec: str) -> Iterable[Tuple[str, str]]:
+        current = StrBuffer()
 
-        for c in spec:
+        for c in spec + ' ':
 
             # Treat spaces as delimiters but exclude from tokens
             if c.isspace():
-                end = True
+                if current != '':
+                    yield 'literal', current.flush()
 
             # Delimiters
-            elif c in '[](|)':
-                if parsing_param:
-                    raise SyntaxError('Unterminated parameter expression')
+            elif c in '<:>[](|)':
                 if current != '':
                     yield 'literal', current.flush()
                 yield 'delim', c
 
-            # Parameters
-            elif c == '<':
-                if parsing_param:
-                    raise SyntaxError("Unexpected parameter opening delimiter '<'")
-                parsing_param = True
-            elif c == '>':
-                if not parsing_param:
-                    raise SyntaxError("Unexpected parameter closing delimiter '>'")
-                if current == '':
-                    raise SyntaxError('Empty parameter name')
-
-                yield 'param', current.flush()
-                parsing_param = False
-
-            # Literals & param names
+            # Accumulate literals
             else:
-                if end:
-                    if current != '':
-                        yield 'literal', current.flush()
-                    end = False
                 current += c
-
-        if parsing_param:
-            raise SyntaxError('Unterminated parameter expression')
 
         if current != '':
             yield 'literal', current.flush()

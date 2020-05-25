@@ -1,5 +1,5 @@
-from typing import List, Callable, Optional, cast
-from .call_match import CallMatch, CallMatchFail
+from typing import List, Tuple, Iterable, Callable, Optional, cast
+from .call_match import CallMatcher, CallMatch, CallMatchFail
 
 
 class StLeaf:
@@ -14,8 +14,11 @@ class StLeaf:
     def traverse(self, callback: Callable[['StLeaf'], None]) -> None:
         callback(self)
 
-    def match_call(self, expr: List[str], call_match: CallMatch) -> List[str]:
-        return expr
+    def iter_traverse(self) -> Iterable['StLeaf']:
+        yield self
+
+    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+        return tokens
 
 
 class StBranch(StLeaf):
@@ -38,6 +41,12 @@ class StBranch(StLeaf):
         for child in self.children:
             child.traverse(callback)
 
+    def iter_traverse(self) -> Iterable[StLeaf]:
+        yield self
+        for child in self.children:
+            for leaf in child.iter_traverse():
+                yield leaf
+
     def num_children(self) -> int:
         return len(self.children)
 
@@ -55,30 +64,49 @@ class StLiteral(StLeaf):
     def debug(self) -> str:
         return f'literal("{self.value}")'
 
-    def match_call(self, expr: List[str], call_match: CallMatch) -> List[str]:
-        if len(expr) < 1 or expr[0] != self.value:
+    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+        if len(tokens) < 1 or not matcher.compare_literal(tokens[0], self.value):
             raise CallMatchFail(f'Literal "{self.value}" not present')
-        return expr[1:]
+
+        match.score += 1
+        return tokens[1:]
 
 
 class StParam(StLeaf):
     node_name = 'param'
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, typename: Optional[str] = None):
         super().__init__()
         self.name = name
+        self.typename = typename
 
     def __str__(self) -> str:
-        return f'<{self.name}>'
+        if self.typename is None:
+            return f'<{self.name}>'
+        else:
+            return f'<{self.name}: {self.typename}>'
 
     def debug(self) -> str:
         return f'param("{self.name}")'
 
-    def match_call(self, expr: List[str], call_match: CallMatch) -> List[str]:
-        if len(expr) < 1:
+    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+        if len(tokens) < 1:
             raise CallMatchFail(f'Parameter <{self.name}> not present')
-        call_match[self.name] = expr[0]
-        return expr[1:]
+
+        if self.typename is not None:
+            constr = matcher.get_type(self.typename)
+            try:
+                value = constr(tokens[0])
+            except ValueError:
+                raise CallMatchFail(f"Argument '{tokens[0]}' for parameter '{self.name}' does not match type '{self.typename}'")
+
+        # Type defaults to string
+        else:
+            value = tokens[0]
+
+        match.score += 1
+        match[self.name] = value
+        return tokens[1:]
 
 
 class StSequence(StBranch):
@@ -87,10 +115,10 @@ class StSequence(StBranch):
     def __str__(self) -> str:
         return ' '.join(str(child) for child in self.children)
 
-    def match_call(self, expr: List[str], call_match: CallMatch) -> List[str]:
+    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         for child in self.children:
-            expr = child.match_call(expr, call_match)
-        return expr
+            tokens = child.match_call(tokens, matcher, match)
+        return tokens
 
 
 class StOptSequence(StBranch):
@@ -100,19 +128,19 @@ class StOptSequence(StBranch):
         children = ' '.join(str(child) for child in self.children)
         return f"[{children}]"
 
-    def match_call(self, expr: List[str], call_match: CallMatch) -> List[str]:
-        expr_temp = expr
-        call_match_temp = CallMatch()
+    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+        tokens_temp = tokens
+        match_temp = CallMatch()
         for child in self.children:
             try:
-                expr_temp = child.match_call(expr_temp, call_match_temp)
+                tokens_temp = child.match_call(tokens_temp, matcher, match_temp)
             except CallMatchFail:
-                call_match.append_opt(False)
-                return expr
+                match.append_opt(False)
+                return tokens
 
-        call_match.append_opt(True)
-        call_match.update(call_match_temp)
-        return expr_temp
+        match.append_opt(True)
+        match.update(match_temp)
+        return tokens_temp
 
 
 class StVarGroup(StBranch):
@@ -127,14 +155,14 @@ class StVarGroup(StBranch):
         children = '|'.join(str(child) for child in self.children)
         return f"({children})"
 
-    def match_call(self, expr: List[str], call_match: CallMatch) -> List[str]:
+    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         for index, variant in enumerate(self.children):
-            call_match_temp = CallMatch()
+            match_temp = CallMatch()
             try:
-                expr_temp = variant.match_call(expr, call_match_temp)
-                call_match.append_var(index)
-                call_match.update(call_match_temp)
-                return expr_temp
+                tokens_temp = variant.match_call(tokens, matcher, match_temp)
+                match.append_var(index)
+                match.update(match_temp)
+                return tokens_temp
             except CallMatchFail:
                 pass
             
