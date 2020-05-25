@@ -1,12 +1,12 @@
-from typing import Iterable, Optional
+from typing import Generator, Optional
 from .utils import StrBuffer
 
 
 class CallLexer:
-    def __init__(self, delims='"\''):
+    def __init__(self, delims: str = '"\''):
         self.delims = delims
 
-    def tokenize(self, cmd: str) -> Iterable[str]:
+    def tokenize(self, cmd: str) -> Generator[str, None, None]:
         current = StrBuffer()
         escape = False
         delim = None  # type: Optional[str]

@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Callable
+from typing import List, Dict, Optional, Callable
 from .utils import loose_bool
 
 
@@ -47,10 +47,11 @@ class CallMatcher:
 
 class CallMatch:
     def __init__(self):
+        self.tokens = None  # type: Optional[List[str]]
         self.score = 0
-        self._params = {}
-        self._opts = []
-        self._vars = []
+        self._params = {}  # type: Dict[str, object]
+        self._opts = []  # type: List[bool]
+        self._vars = []  # type: List[int]
 
     def update(self, other: 'CallMatch') -> None:
         self.score += other.score
