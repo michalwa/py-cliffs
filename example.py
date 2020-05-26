@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 from clifford import *
 
 clifford = CommandDispatcher()
@@ -44,8 +45,15 @@ def command_eval(match: CallMatch):
     return eval(match['expr'])
 
 
+# Commands callbacks can recieve arguments from the caller of `dispatch()`
+@clifford.command('tell time')
+def command_tell_time(datetime: datetime):
+    print(f"The time is {datetime}")
+
+
+# All callback parameters are optional and indicate what the callback needs to recieve
 @clifford.command('help', call_matcher=CallMatcher(case_sensitive=False))
-def command_show_help(match: CallMatch):
+def command_show_help():
     print('Known commands')
     print('--------------')
 
@@ -57,9 +65,12 @@ def command_show_help(match: CallMatch):
 if __name__ == '__main__':
     try:
         while True:
-
             try:
-                result = clifford.dispatch(input('> '))
+
+                # Callback args will be passed to command callbacks for successful command matches
+                args = {'datetime': datetime.now()}
+
+                result = clifford.dispatch(input('> '), **args)
                 if result is not None:
                     print(f'= {result}')
 

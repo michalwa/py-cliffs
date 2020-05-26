@@ -7,15 +7,15 @@ StrConstructor = Callable[[str], object]
 
 
 class CallMatchFail(Exception):
-    '''
+    """
     Raised by syntax tree nodes when matching fails in an expected way
-    '''
+    """
 
 class CallMatchError(Exception):
-    '''
+    """
     Raised by syntax tree nodes when matching fails unexpectedly
     (because of a mistake in the call or the syntax)
-    '''
+    """
 
 
 class CallMatcher:

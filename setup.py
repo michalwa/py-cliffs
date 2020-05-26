@@ -12,5 +12,6 @@ setup(
     author='michalwa',
     author_email='michalwa2003@gmail.com',
     url='https://github.com/michalwa/py-clifford',
-    packages=['clifford']
+    packages=['clifford'],
+    install_requires=['typing_extensions']
 )
