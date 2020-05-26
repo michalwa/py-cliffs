@@ -1,12 +1,24 @@
 from typing import Iterable, Tuple
 from .syntax_tree import *
 
+
+class SymbolList:
+    def __init__(self):
+        self.symbols = []
+
+    def register(self, symbol: str) -> str:
+        if symbol in self.symbols:
+            raise SyntaxError(f"Symbol '{symbol}' used more than once")
+        self.symbols.append(symbol)
+        return symbol
+
+
 class SyntaxParser:
     def parse(self, tokens: Iterable[Tuple[str, str]]) -> StBranch:
         root = StSequence()
         current = root  # type: StBranch
 
-        symbols = []
+        symbols = SymbolList()
 
         state = 'NORMAL'
         param_name = None
@@ -17,18 +29,22 @@ class SyntaxParser:
             # Literals
             if token_type == 'literal':
 
-                # Literals serve both as parameter names and type specifiers
+                # Literals also serve as parameter names
                 if state == 'PARAM_NAME':
                     if param_name is not None:
                         raise SyntaxError(f"Unexpected literal '{token_value}'")
-                    if param_name in symbols:
-                        raise SyntaxError(f"Duplicate symbol '{param_name}'")
                     param_name = token_value
-                    symbols.append(param_name)
+
+                # ...parameter types
                 elif state == 'PARAM_TYPE':
                     if param_type is not None:
                         raise SyntaxError(f"Unexpected literal '{token_value}'")
                     param_type = token_value
+
+                # ...and group identifiers
+                elif state == 'IDENTIFIER':
+                    current.last_child.identifier = symbols.register(token_value)
+                    state = 'NORMAL'
 
                 # Regular literal
                 else:
@@ -42,11 +58,15 @@ class SyntaxParser:
                         raise SyntaxError("Unexpected parameter opening delimiter '<'")
                     state = 'PARAM_NAME'
 
-                # Parameter type specifier separator
+                # Parameter type specifier separator,
+                # Group identifier separator
                 elif token_value == ':':
-                    if state != 'PARAM_NAME' or param_name is None:
-                        raise SyntaxError("Unexpected parameter type separator ':'")
-                    state = 'PARAM_TYPE'
+                    if state == 'PARAM_NAME' and param_name is not None:
+                        state = 'PARAM_TYPE'
+                    elif state == 'NORMAL' and hasattr(current.last_child, 'identifier'):
+                        state = 'IDENTIFIER'
+                    else:
+                        raise SyntaxError("Unexpected separator ':'")
 
                 # Closing parameter delimiter
                 elif token_value == '>':
@@ -55,20 +75,23 @@ class SyntaxParser:
                     if param_name is None:
                         raise SyntaxError('Empty parameter name')
 
-                    current.append_child(StParam(param_name, param_type))
+                    current.append_child(StParam(symbols.register(param_name), param_type))
                     param_name = None
                     param_type = None
                     state = 'NORMAL'
 
                 # Opening optional sequence delimiter
                 elif token_value == '[':
+                    if state != 'NORMAL':
+                        raise SyntaxError("Unexpected optional sequence opening delimiter '['")
+
                     child = StOptSequence()  # type: StBranch
                     current.append_child(child)
                     current = child
 
                 # Closing optional sequence delimiter
                 elif token_value == ']':
-                    if not isinstance(current, StOptSequence):
+                    if state != 'NORMAL' or not isinstance(current, StOptSequence):
                         raise SyntaxError("Unexpected optional sequence closing delimiter ']'")
                     if current.num_children() == 0:
                         raise SyntaxError('Empty optional sequence')
@@ -77,6 +100,9 @@ class SyntaxParser:
 
                 # Opening variant group delimiter
                 elif token_value == '(':
+                    if state != 'NORMAL':
+                        raise SyntaxError("Unexpected variant group opening delimiter '('")
+
                     child = StVarGroup()
                     grandchild = StSequence()
                     child.append_child(grandchild)
@@ -85,7 +111,7 @@ class SyntaxParser:
 
                 # Variant group sequence separator
                 elif token_value == '|':
-                    if not isinstance(current, StSequence) or not isinstance(current.parent, StVarGroup):
+                    if state != 'NORMAL' or not isinstance(current, StSequence) or not isinstance(current.parent, StVarGroup):
                         raise SyntaxError("Unexpected variant separator '|'")
                     if current.num_children() == 0:
                         raise SyntaxError('Empty variant')
@@ -97,7 +123,7 @@ class SyntaxParser:
 
                 # Closing variant group delimiter
                 elif token_value == ')':
-                    if not isinstance(current, StSequence) or not isinstance(current.parent, StVarGroup):
+                    if state != 'NORMAL' and not isinstance(current, StSequence) or not isinstance(current.parent, StVarGroup):
                         raise SyntaxError("Unexpected variant group closing delimiter ')'")
                     if current.num_children() == 0:
                         raise SyntaxError('Empty variant')

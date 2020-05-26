@@ -6,7 +6,7 @@ class StLeaf:
     node_name = 'leaf'
 
     def __init__(self):
-        self.parent = None
+        self.parent = None  # type: Optional[StBranch]
 
     def debug(self) -> str:
         return self.node_name
@@ -35,6 +35,10 @@ class StBranch(StLeaf):
         self.children.append(child)
         child.parent = self
         return self
+
+    @property
+    def last_child(self) -> Optional[StLeaf]:
+        return self.children[-1] if len(self.children) > 0 else None
 
     def traverse(self, callback: Callable[[StLeaf], None]) -> None:
         callback(self)
@@ -123,6 +127,10 @@ class StSequence(StBranch):
 
 class StOptSequence(StBranch):
     node_name = 'opt_sequence'
+    
+    def __init__(self):
+        super().__init__()
+        self.identifier = None  # type: Optional[str]
 
     def __str__(self) -> str:
         children = ' '.join(str(child) for child in self.children)
@@ -135,16 +143,28 @@ class StOptSequence(StBranch):
             try:
                 tokens_temp = child.match_call(tokens_temp, matcher, match_temp)
             except CallMatchFail:
-                match.opts.append(False)
+                if self.identifier is not None:
+                    match.params[self.identifier] = False
+                else:
+                    match.opts.append(False)
+
                 return tokens
 
-        match.opts.append(True)
+        if self.identifier is not None:
+            match.params[self.identifier] = True
+        else:
+            match.opts.append(True)
+
         match.update(match_temp)
         return tokens_temp
 
 
 class StVarGroup(StBranch):
     node_name = 'var_group'
+    
+    def __init__(self):
+        super().__init__()
+        self.identifier = None  # type: Optional[str]
 
     def append_child(self, child):
         if not isinstance(child, StSequence):
@@ -160,7 +180,12 @@ class StVarGroup(StBranch):
             match_temp = CallMatch()
             try:
                 tokens_temp = variant.match_call(tokens, matcher, match_temp)
-                match.vars.append(index)
+
+                if self.identifier is not None:
+                    match.params[self.identifier] = index
+                else:
+                    match.vars.append(index)
+
                 match.update(match_temp)
                 return tokens_temp
             except CallMatchFail:

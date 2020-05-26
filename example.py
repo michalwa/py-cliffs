@@ -6,7 +6,7 @@ clifford = CommandDispatcher()
 
 
 # The decorator registers the function as the callback for the specified command
-@clifford.command('set [loud] alarm at <time: int> (am|pm) [with message <message>]')
+@clifford.command('set [loud] alarm at <time:int> (am|pm) [with message <message>]')
 def command_set_alarm(match: CallMatch):
 
     # The callback recieves a `match` object describing the configuration
@@ -30,15 +30,6 @@ def command_set_alarm(match: CallMatch):
     print(t)
 
 
-# The user will have to use an escape sequence to type the single quote
-@clifford.command("i [don't] like bread")
-def command_like_bread(match: CallMatch):
-    if not match.opts[0]:
-        print('I like bread too')
-    else:
-        print("I don't like bread either")
-
-
 # You can pass parameters directly as arguments to a callback
 @clifford.command('eval <expr>')
 def command_eval(expr: str):
@@ -47,10 +38,23 @@ def command_eval(expr: str):
     return eval(expr)
 
 
+# You can use a colon `:` to assign identifiers to optional sequences and variant groups,
+# these will be then added to parameters and can be recieved with an argument.
+# Note that if you assign an identifier to a group, its state won't be present in the
+# index-based array (`opts` or `vars`).
+# These identifiers will not be displayed in the usage help.
+@clifford.command("i [don't]:negation like bread")
+def command_like_bread(negation: bool):
+    if not negation:
+        print('I like bread too')
+    else:
+        print("I don't like bread either")
+
+
 # Command callbacks can also recieve additional arguments from the caller of `dispatch()`
 @clifford.command('tell time')
-def command_tell_time(datetime: datetime):
-    print(f"The time is {datetime}")
+def command_tell_time(now: datetime):
+    print(f"The time is {now}")
 
 
 # All callback parameters are optional and indicate what the callback needs to recieve
@@ -64,13 +68,17 @@ def command_show_help():
     print('\n'.join(clifford.get_usage_lines()))
 
 
+# The decorator returns a `Command` object which you can manipulate
+command_show_help.usage_lines = ['help (case insensitive): Displays this help message']
+
+
 if __name__ == '__main__':
     try:
         while True:
             try:
 
                 # Callback args will be passed to command callbacks for successful command matches
-                args = {'datetime': datetime.now()}
+                args = {'now': datetime.now()}
 
                 result = clifford.dispatch(input('> '), **args)
                 if result is not None:

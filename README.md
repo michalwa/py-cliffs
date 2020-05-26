@@ -1,6 +1,8 @@
 # py-clifford
 This is an implementation of [Clifford](https://github.com/michalwa/Clifford)
 (originally written in Java) for Python.
+Although this (preferred) implementation has much more functionality,
+it's still compliant with the original concept.
 
 **Clifford** is a command parsing utility useful for creating internal
 command line interfaces for your applications. Its syntax specification method
@@ -39,4 +41,4 @@ But will not accept the following:
     set alarm at pm
     ...
 
-For more details on how to process the matched call check out the [example](example.py).
+For more syntax features and implementation details check out the [example](example.py).
