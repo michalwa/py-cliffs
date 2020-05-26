@@ -18,10 +18,10 @@ def command_set_alarm(match: CallMatch):
     #   match.var(i)      - 0-based index of the present variant of the i-th variant group
     #
 
-    loud = match.opt(0)                 # Check whether optional sequence is present
-    time = match['time']                # Retrieve parameter values
-    message = match['message']
-    am_pm = ['am', 'pm'][match.var(0)]  # Get variant index
+    loud = match.opts[0]                 # Check whether optional sequence is present
+    time = match.params['time']          # Retrieve parameter values
+    message = match.params['message']
+    am_pm = ['am', 'pm'][match.vars[0]]  # Get variant index
 
     # Print something out
     t = 'Setting ' + ('a loud ' if loud else 'an ') + f'alarm at {time} {am_pm.upper()}'
@@ -33,19 +33,21 @@ def command_set_alarm(match: CallMatch):
 # The user will have to use an escape sequence to type the single quote
 @clifford.command("i [don't] like bread")
 def command_like_bread(match: CallMatch):
-    if not match.opt(0):
+    if not match.opts[0]:
         print('I like bread too')
     else:
         print("I don't like bread either")
 
 
-# Command callbacks can return values which will be passed to the caller of `dispatch()`
+# You can pass parameters directly as arguments to a callback
 @clifford.command('eval <expr>')
-def command_eval(match: CallMatch):
-    return eval(match['expr'])
+def command_eval(expr: str):
+
+    # Command callbacks can return values which will be passed to the caller of `dispatch()`
+    return eval(expr)
 
 
-# Commands callbacks can recieve arguments from the caller of `dispatch()`
+# Command callbacks can also recieve additional arguments from the caller of `dispatch()`
 @clifford.command('tell time')
 def command_tell_time(datetime: datetime):
     print(f"The time is {datetime}")

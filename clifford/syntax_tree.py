@@ -105,7 +105,7 @@ class StParam(StLeaf):
             value = tokens[0]
 
         match.score += 1
-        match[self.name] = value
+        match.params[self.name] = value
         return tokens[1:]
 
 
@@ -135,10 +135,10 @@ class StOptSequence(StBranch):
             try:
                 tokens_temp = child.match_call(tokens_temp, matcher, match_temp)
             except CallMatchFail:
-                match.append_opt(False)
+                match.opts.append(False)
                 return tokens
 
-        match.append_opt(True)
+        match.opts.append(True)
         match.update(match_temp)
         return tokens_temp
 
@@ -160,7 +160,7 @@ class StVarGroup(StBranch):
             match_temp = CallMatch()
             try:
                 tokens_temp = variant.match_call(tokens, matcher, match_temp)
-                match.append_var(index)
+                match.vars.append(index)
                 match.update(match_temp)
                 return tokens_temp
             except CallMatchFail:

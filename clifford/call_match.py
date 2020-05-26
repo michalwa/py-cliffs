@@ -49,33 +49,15 @@ class CallMatch:
     def __init__(self):
         self.tokens = None  # type: Optional[List[str]]
         self.score = 0
-        self._params = {}  # type: Dict[str, object]
-        self._opts = []  # type: List[bool]
-        self._vars = []  # type: List[int]
+        self.params = {}  # type: Dict[str, object]
+        self.opts = []  # type: List[bool]
+        self.vars = []  # type: List[int]
 
     def update(self, other: 'CallMatch') -> None:
         self.score += other.score
-        self._params.update(other._params)
-        self._opts += other._opts
-        self._vars += other._vars
-
-    def append_opt(self, present: bool) -> None:
-        self._opts.append(present)
-
-    def opt(self, index: int) -> bool:
-        return self._opts[index]
-
-    def append_var(self, variant: int) -> None:
-        self._vars.append(variant)
-
-    def var(self, index: int) -> int:
-        return self._vars[index]
-
-    def __getitem__(self, index):
-        return self._params[index] if index in self._params else None
-
-    def __setitem__(self, index, value):
-        self._params[index] = value
+        self.params.update(other.params)
+        self.opts += other.opts
+        self.vars += other.vars
 
     def __str__(self) -> str:
-        return f'params: {self._params}, optionals: {self._opts}, variants: {self._vars}'
+        return f'params: {self.params}, optionals: {self.opts}, variants: {self.vars}'

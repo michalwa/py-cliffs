@@ -10,7 +10,7 @@ from .command import Command
 
 # typedefs
 _T = TypeVar('_T')
-CommandCallbackDecorator = Callable[[Callable[..., _T]], Callable[..., _T]]
+CommandCallbackDecorator = Callable[[Callable[..., _T]], Command]
 
 
 class CommandDispatchError(Exception):
@@ -32,9 +32,10 @@ class CommandDispatcher:
     def command(self, syntax: str, **kwargs) -> CommandCallbackDecorator: 
         st_root = self.syntax_parser.parse(self.syntax_lexer.tokenize(syntax))
 
-        def decorator(f: Callable[..., _T]) -> Callable[..., _T]:
-            self.register(Command(st_root, f, **kwargs))
-            return f
+        def decorator(f: Callable[..., _T]) -> Command:
+            cmd = Command(st_root, f, **kwargs)
+            self.register(cmd)
+            return cmd
             
         return decorator
 

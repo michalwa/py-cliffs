@@ -6,6 +6,8 @@ class SyntaxParser:
         root = StSequence()
         current = root  # type: StBranch
 
+        symbols = []
+
         state = 'NORMAL'
         param_name = None
         param_type = None
@@ -19,7 +21,10 @@ class SyntaxParser:
                 if state == 'PARAM_NAME':
                     if param_name is not None:
                         raise SyntaxError(f"Unexpected literal '{token_value}'")
+                    if param_name in symbols:
+                        raise SyntaxError(f"Duplicate symbol '{param_name}'")
                     param_name = token_value
+                    symbols.append(param_name)
                 elif state == 'PARAM_TYPE':
                     if param_type is not None:
                         raise SyntaxError(f"Unexpected literal '{token_value}'")
