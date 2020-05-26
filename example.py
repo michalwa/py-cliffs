@@ -1,12 +1,18 @@
 import sys
+from typing import Optional
 from datetime import datetime
+from time import struct_time, strptime, strftime
 from clifford import *
 
 clifford = CommandDispatcher()
 
+# You can use custom call matchers to define custom parameter types
+custom_matcher = CallMatcher()
+custom_matcher.register_type(lambda s: strptime(s, '%I:%M'), '12h_time')
+
 
 # The decorator registers the function as the callback for the specified command
-@clifford.command('set [loud] alarm at <time:int> (am|pm) [with message <message>]')
+@clifford.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message>]', call_matcher=custom_matcher)
 def command_set_alarm(match: CallMatch):
 
     # The callback recieves a `match` object describing the configuration
@@ -18,13 +24,16 @@ def command_set_alarm(match: CallMatch):
     #   match.var(i)      - 0-based index of the present variant of the i-th variant group
     #
 
-    loud = match.opts[0]                 # Check whether optional sequence is present
-    time = match.params['time']          # Retrieve parameter values
-    message = match.params['message']
-    am_pm = ['am', 'pm'][match.vars[0]]  # Get variant index
+    # Check whether optional sequence is present
+    loud = match.opts[0]  # type: bool
+    # Retrieve parameter values
+    time = match.params['time']  # type: struct_time
+    message = match.params['message'] if match.opts[1] else None  # type: Optional[str]
+    # Get variant index
+    am_pm = ['am', 'pm'][match.vars[0]]  # type: int
 
     # Print something out
-    t = 'Setting ' + ('a loud ' if loud else 'an ') + f'alarm at {time} {am_pm.upper()}'
+    t = 'Setting ' + ('a loud ' if loud else 'an ') + 'alarm at ' + strftime('%I:%M', time) + ' ' + am_pm.upper()
     if message is not None:
         t += f' with message: "{message}"'
     print(t)
