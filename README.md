@@ -6,18 +6,22 @@ it's still compliant with the original concept.
 
 **Clifford** is a command parsing utility useful for creating internal
 command line interfaces for your applications. Its syntax specification method
-allows command definitions and usage help to be united with a single expression.
+allows command definitions and usage help to be united with a single syntax.
+This way usage specification can be directly used to generate command parsers.
 
 ## Syntax
 **Clifford** uses a rather intuitive syntax to specify the syntax of commands:
-- `literals` specify **required** terms that the command call must contain
-  in order to match the specification,
+- `literals` specify required terms that the command call must contain
+  in order to match the specification
 - `<parameters>` accept a single token in the command call and store its value
-  for processing by the command handler,
-- `(variant|groups|...)` encapsulate sequences of elements and accept only one of
+  for processing by the command handler; parameters can also specify types
+  (`<param: type>`) which their values will be validated for and parsed into
+- `<tails...>` will collect any remaining tokens after all previous elements
+  have been matched
+- `(variant|groups)` encapsulate sequences of elements and accept only one of
   those sequences (index of the present sequence is stored for processing by the handler)
 - `[optional sequences]` may or may not be present in the command call
-  (boolean indicating presence is stored for processing by the handler).
+  (boolean indicating presence is stored for processing by the handler)
 
 ## Example
 To demonstrate the concept of how **Clifford** works, consider this simple command syntax

@@ -6,13 +6,13 @@ from clifford import *
 
 clifford = CommandDispatcher()
 
-# You can use custom call matchers to define custom parameter types
+# You can use custom call matchers to define custom parameter types.
 custom_matcher = CallMatcher()
 custom_matcher.register_type(lambda s: strptime(s, '%I:%M'), '12h_time')
 
 
 # The decorator registers the function as the callback for the specified command
-@clifford.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message>]', call_matcher=custom_matcher)
+@clifford.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message>]', matcher=custom_matcher)
 def command_set_alarm(match: CallMatch):
 
     # The callback recieves a `match` object describing the configuration
@@ -39,8 +39,10 @@ def command_set_alarm(match: CallMatch):
     print(t)
 
 
-# Tail parameters (`...`) collect all remaining tokens from the command call
-# You can pass parameters directly as arguments to a callback
+# Tail parameters (`...`) collect all remaining tokens from the command call.
+# Nothing can follow such parameters, anything after it will cause a `SyntaxError`.
+# 
+# You can pass parameters directly as arguments to a callback.
 @clifford.command('eval <expr...>')
 def command_eval(expr: List[str]):
 
@@ -65,6 +67,19 @@ def command_like_bread(negation: bool):
 @clifford.command('tell time')
 def command_tell_time(now: datetime):
     print(f"The time is {now}")
+
+
+# Commands don't have to start with a literal.
+# 
+# Keep in mind though that when matching fails, the most likely command will be guessed
+# based on the beginning portion of the match.
+# 
+# For example, when calling: `6 alarm at`, even though more tokens match the
+# "set alarm at ..." command, the command below will be reported as missing arguments.
+@clifford.command('<n:int> times say <what>')
+def command_repeat(n: int, what: str):
+    for _ in range(n):
+        print(what) 
 
 
 # All callback parameters are optional and indicate what the callback needs to recieve

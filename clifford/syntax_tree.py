@@ -17,8 +17,13 @@ class StLeaf:
     def iter_traverse(self) -> Iterable['StLeaf']:
         yield self
 
-    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         return tokens
+
+    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+        if match.terminated:
+            raise SyntaxError(f"Tried matching {self.node_name} after matching was terminated")
+        return self._match_call(tokens, matcher, match)
 
 
 class StBranch(StLeaf):
@@ -68,7 +73,7 @@ class StLiteral(StLeaf):
     def debug(self) -> str:
         return f'literal("{self.value}")'
 
-    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         if len(tokens) < 1 or not matcher.compare_literal(tokens[0], self.value):
             raise CallMatchFail(f'Literal "{self.value}" not present')
 
@@ -93,7 +98,7 @@ class StParam(StLeaf):
     def debug(self) -> str:
         return f'param("{self.name}")'
 
-    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         if len(tokens) < 1:
             raise CallMatchFail(f'Parameter <{self.name}> not present')
 
@@ -119,7 +124,7 @@ class StSequence(StBranch):
     def __str__(self) -> str:
         return ' '.join(str(child) for child in self.children)
 
-    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         for child in self.children:
             tokens = child.match_call(tokens, matcher, match)
         return tokens
@@ -136,7 +141,7 @@ class StOptSequence(StBranch):
         children = ' '.join(str(child) for child in self.children)
         return f"[{children}]"
 
-    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         tokens_temp = tokens
         match_temp = CallMatch()
         for child in self.children:
@@ -175,7 +180,7 @@ class StVarGroup(StBranch):
         children = '|'.join(str(child) for child in self.children)
         return f"({children})"
 
-    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         for index, variant in enumerate(self.children):
             match_temp = CallMatch()
             try:
@@ -204,6 +209,7 @@ class StTail(StLeaf):
     def __str__(self) -> str:
         return f"<{self.identifier}...>"
 
-    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         match.params[self.identifier] = tokens
+        match.terminated = True  # Disallow further elements to be matched
         return []

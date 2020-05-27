@@ -7,20 +7,13 @@ StrConstructor = Callable[[str], object]
 
 
 class CallMatchFail(Exception):
-    """
-    Raised by syntax tree nodes when matching fails in an expected way
-    """
-
-class CallMatchError(Exception):
-    """
-    Raised by syntax tree nodes when matching fails unexpectedly
-    (because of a mistake in the syntax)
-    """
+    """Raised by syntax tree nodes when matching fails in an expected way"""
 
 
 class CallMatcher:
     def __init__(self, case_sensitive: bool = True):
         self._types = {}  # type: Dict[str, StrConstructor]
+
         self.case_sensitive = case_sensitive
         
         self.register_type(str)
@@ -35,7 +28,7 @@ class CallMatcher:
 
     def get_type(self, name: str) -> StrConstructor:
         if not name in self._types:
-            raise CallMatchError(f"Undefined type '{name}'")
+            raise SyntaxError(f"Undefined type '{name}'")
         return self._types[name]
 
     def compare_literal(self, a: str, b: str) -> bool:
@@ -47,6 +40,8 @@ class CallMatcher:
 
 class CallMatch:
     def __init__(self):
+        self.terminated = False
+
         self.tokens = None  # type: Optional[List[str]]
         self.score = 0
         self.params = {}  # type: Dict[str, object]
@@ -55,6 +50,7 @@ class CallMatch:
         self.tail = []  # type: List[str]
 
     def update(self, other: 'CallMatch') -> None:
+        self.terminated |= other.terminated
         self.score += other.score
         self.params.update(other.params)
         self.opts += other.opts
