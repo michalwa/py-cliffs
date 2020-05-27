@@ -1,4 +1,4 @@
-from typing import List, Tuple, Iterable, Callable, Optional, cast
+from typing import List, Tuple, Iterable, Callable, Optional
 from .call_match import CallMatcher, CallMatch, CallMatchFail
 
 
@@ -128,9 +128,9 @@ class StSequence(StBranch):
 class StOptSequence(StBranch):
     node_name = 'opt_sequence'
     
-    def __init__(self):
+    def __init__(self, identifier: Optional[str] = None):
         super().__init__()
-        self.identifier = None  # type: Optional[str]
+        self.identifier = identifier
 
     def __str__(self) -> str:
         children = ' '.join(str(child) for child in self.children)
@@ -162,9 +162,9 @@ class StOptSequence(StBranch):
 class StVarGroup(StBranch):
     node_name = 'var_group'
     
-    def __init__(self):
+    def __init__(self, identifier: Optional[str] = None):
         super().__init__()
-        self.identifier = None  # type: Optional[str]
+        self.identifier = identifier
 
     def append_child(self, child):
         if not isinstance(child, StSequence):
@@ -192,3 +192,18 @@ class StVarGroup(StBranch):
                 pass
             
         raise CallMatchFail('No variant present')
+
+
+class StTail(StLeaf):
+    node_name = 'tail'
+
+    def __init__(self, identifier: str):
+        super().__init__()
+        self.identifier = identifier
+
+    def __str__(self) -> str:
+        return f"<{self.identifier}...>"
+
+    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+        match.params[self.identifier] = tokens
+        return []

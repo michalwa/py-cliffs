@@ -40,22 +40,40 @@ class CommandDispatcher:
         return decorator
 
     def dispatch(self, call: str, **callback_args) -> Any:
-        max_score = 0
-        best_fail = None
+        best_succ_match = None  # Highest-scoring successful match
+        best_command = None     # Command having the highest-scoring successful match
+        best_fail_match = None  # Highest-scoring failed match
+        best_fail = None        # Exception from the highest-scoring failed match
 
+        # Match all commands and look for the one with the highest score
         for command in self._commands:
             match = CallMatch()
+
             try:
-                return command.execute(call, match, callback_args)
+                command.match(call, match)
+
+                if best_succ_match is None or match.score > best_succ_match.score:
+                    best_succ_match = match
+                    best_command = command
+
             except CallMatchFail as fail:
-                if match.score > max_score:
-                    max_score = match.score
+                temp_fail = fail
+                
+                if best_fail_match is None or match.score > best_fail_match.score:
+                    best_fail_match = match
                     best_fail = fail
-            
-        if best_fail is not None:
+
+        # If the highest-scoring match was successful, execute the command
+        if best_command is not None:
+            return best_command.execute(best_succ_match, callback_args)
+
+        # Otherwise raise the error from the highest-scoring match
+        elif best_fail_match.score > 0:
             raise best_fail
 
-        raise UnknownCommandError('Unknown command')
+        # Or unknown command error if it's 0
+        else:
+            raise UnknownCommandError('Unknown command')
 
     def get_usage_lines(self) -> Iterable[str]:
         return chain.from_iterable(command.get_usage_lines() for command in self._commands)

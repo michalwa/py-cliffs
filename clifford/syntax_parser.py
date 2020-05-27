@@ -26,29 +26,38 @@ class SyntaxParser:
 
         for token_type, token_value in tokens:
 
-            # Literals
-            if token_type == 'literal':
+            # Symbols
+            if token_type == 'symbol':
 
-                # Literals also serve as parameter names
-                if state == 'PARAM_NAME':
+                # Parameter names
+                if state == 'BEFORE_PARAM_NAME':
                     if param_name is not None:
                         raise SyntaxError(f"Unexpected literal '{token_value}'")
                     param_name = token_value
+                    state = 'AFTER_PARAM_NAME'
 
-                # ...parameter types
-                elif state == 'PARAM_TYPE':
+                # Parameter types
+                elif state == 'BEFORE_PARAM_TYPE':
                     if param_type is not None:
                         raise SyntaxError(f"Unexpected literal '{token_value}'")
                     param_type = token_value
+                    state = 'AFTER_PARAM_TYPE'
 
-                # ...and group identifiers
-                elif state == 'IDENTIFIER':
+                # Group identifiers
+                elif state == 'BEFORE_IDENTIFIER':
                     current.last_child.identifier = symbols.register(token_value)
                     state = 'NORMAL'
 
-                # Regular literal
+                # Literals
                 else:
                     current.append_child(StLiteral(token_value))
+
+            # Tail ellipsis
+            elif token_type == 'ellipsis':
+                if state != 'AFTER_PARAM_NAME':
+                    raise SyntaxError("Unexpected ellipsis '...'")
+                current.append_child(StTail(param_name))
+                state = 'AFTER_TAIL'
 
             elif token_type == 'delim':
 
@@ -56,29 +65,39 @@ class SyntaxParser:
                 if token_value == '<':
                     if state != 'NORMAL':
                         raise SyntaxError("Unexpected parameter opening delimiter '<'")
-                    state = 'PARAM_NAME'
+                    state = 'BEFORE_PARAM_NAME'
 
-                # Parameter type specifier separator,
-                # Group identifier separator
                 elif token_value == ':':
-                    if state == 'PARAM_NAME' and param_name is not None:
-                        state = 'PARAM_TYPE'
+
+                    # Parameter type specifier separator,
+                    if state == 'AFTER_PARAM_NAME':
+                        state = 'BEFORE_PARAM_TYPE'
+
+                    # Group identifier separator
                     elif state == 'NORMAL' and hasattr(current.last_child, 'identifier'):
-                        state = 'IDENTIFIER'
+                        state = 'BEFORE_IDENTIFIER'
+
                     else:
                         raise SyntaxError("Unexpected separator ':'")
 
-                # Closing parameter delimiter
                 elif token_value == '>':
-                    if state != 'PARAM_NAME' and state != 'PARAM_TYPE':
-                        raise SyntaxError("Unexpected parameter closing delimiter '>'")
-                    if param_name is None:
-                        raise SyntaxError('Empty parameter name')
 
-                    current.append_child(StParam(symbols.register(param_name), param_type))
-                    param_name = None
-                    param_type = None
-                    state = 'NORMAL'
+                    # Closing parameter delimiter
+                    if state in ['AFTER_PARAM_NAME', 'AFTER_PARAM_TYPE']:
+                        if param_name is None:
+                            raise SyntaxError('Empty parameter name')
+
+                        current.append_child(StParam(symbols.register(param_name), param_type))
+                        param_name = None
+                        param_type = None
+                        state = 'NORMAL'
+
+                    # Closing tail parameter delimiter
+                    elif state == 'AFTER_TAIL':
+                        pass
+
+                    else:
+                        raise SyntaxError("Unexpected parameter closing delimiter '>'")
 
                 # Opening optional sequence delimiter
                 elif token_value == '[':

@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class StrBuffer:
     def __init__(self):
         self._buffer = ''
@@ -5,6 +8,16 @@ class StrBuffer:
     def flush(self) -> str:
         temp, self._buffer = self._buffer, ''
         return temp
+
+    def trim(self, start: Optional[int] = None, end: Optional[int] = None):
+        if start is None:
+            if end is not None:
+                self._buffer = self._buffer[:end]
+        else:
+            if end is None:
+                self._buffer = self._buffer[start:]
+            else:
+                self._buffer = self._buffer[start:end]
 
     def __iadd__(self, seq: str) -> 'StrBuffer':
         self._buffer += seq

@@ -14,7 +14,7 @@ class CallMatchFail(Exception):
 class CallMatchError(Exception):
     """
     Raised by syntax tree nodes when matching fails unexpectedly
-    (because of a mistake in the call or the syntax)
+    (because of a mistake in the syntax)
     """
 
 
@@ -52,6 +52,7 @@ class CallMatch:
         self.params = {}  # type: Dict[str, object]
         self.opts = []  # type: List[bool]
         self.vars = []  # type: List[int]
+        self.tail = []  # type: List[str]
 
     def update(self, other: 'CallMatch') -> None:
         self.score += other.score

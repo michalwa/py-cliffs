@@ -9,19 +9,21 @@ class Command:
     def __init__(self, syntax: StBranch, callback: Callable[..., Any], **kwargs):
         self.syntax = syntax
         self.callback = callback
-        self.call_lexer = kwargs['call_lexer'] if 'call_lexer' in kwargs else CallLexer()
-        self.call_matcher = kwargs['call_matcher'] if 'call_matcher' in kwargs else CallMatcher()
+        self.lexer = kwargs['lexer'] if 'lexer' in kwargs else CallLexer()
+        self.matcher = kwargs['matcher'] if 'matcher' in kwargs else CallMatcher()
 
         self.usage_lines = [str(self.syntax)]
 
-    def execute(self, call: str, match: CallMatch, callback_args = {}) -> object:
-        match.tokens = list(self.call_lexer.tokenize(call))
+    def match(self, call: str, match: CallMatch):
+        match.tokens = list(self.lexer.tokenize(call))
 
-        left = self.syntax.match_call(match.tokens, self.call_matcher, match)
+        left = self.syntax.match_call(match.tokens, self.matcher, match)
         if len(left) > 0:
             raise CallMatchFail('Too many arguments')
 
-        # Pass only args required by the callback signature
+    def execute(self, match: CallMatch, callback_args = {}) -> object:
+
+        # Pass only those args that are required by the callback signature
         sig = signature(self.callback)
         callback_args.update({'match': match})
         callback_args.update(match.params)

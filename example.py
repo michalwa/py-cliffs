@@ -1,5 +1,5 @@
 import sys
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from time import struct_time, strptime, strftime
 from clifford import *
@@ -39,12 +39,13 @@ def command_set_alarm(match: CallMatch):
     print(t)
 
 
+# Tail parameters (`...`) collect all remaining tokens from the command call
 # You can pass parameters directly as arguments to a callback
-@clifford.command('eval <expr>')
-def command_eval(expr: str):
+@clifford.command('eval <expr...>')
+def command_eval(expr: List[str]):
 
     # Command callbacks can return values which will be passed to the caller of `dispatch()`
-    return eval(expr)
+    return eval(' '.join(expr))
 
 
 # You can use a colon `:` to assign identifiers to optional sequences and variant groups,
@@ -67,7 +68,7 @@ def command_tell_time(now: datetime):
 
 
 # All callback parameters are optional and indicate what the callback needs to recieve
-@clifford.command('help', call_matcher=CallMatcher(case_sensitive=False))
+@clifford.command('help', matcher=CallMatcher(case_sensitive=False))
 def command_show_help():
     print('Known commands')
     print('--------------')

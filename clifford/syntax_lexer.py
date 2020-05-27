@@ -11,17 +11,21 @@ class SyntaxLexer:
             # Treat spaces as delimiters but exclude from tokens
             if c.isspace():
                 if current != '':
-                    yield 'literal', current.flush()
+                    yield 'symbol', current.flush()
 
             # Delimiters
             elif c in '<:>[](|)':
                 if current != '':
-                    yield 'literal', current.flush()
+                    yield 'symbol', current.flush()
                 yield 'delim', c
 
-            # Accumulate literals
+            # Accumulate symbols
             else:
                 current += c
 
-        if current != '':
-            yield 'literal', current.flush()
+                # Yield off ellipses
+                if str(current).endswith('...'):
+                    current.trim(end=-3)
+                    if current != '':
+                        yield 'symbol', current.flush()
+                    yield 'ellipsis', '...'
