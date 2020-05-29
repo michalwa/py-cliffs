@@ -94,7 +94,7 @@ def command_show_help():
 
 
 # The decorator returns a `Command` object which you can manipulate
-command_show_help.usage_lines = ['help (case insensitive): Displays this help message']
+command_show_help.get_usage_lines = lambda: ['help (case insensitive): Displays this help message']
 
 
 if __name__ == '__main__':
