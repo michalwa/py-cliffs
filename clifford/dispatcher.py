@@ -1,5 +1,4 @@
-from typing import TypeVar, Dict, List, Iterable, Tuple, Callable, Any
-from itertools import chain
+from typing import TypeVar, Optional, Dict, List, Iterable, Tuple, Callable, Any
 from .syntax_tree import StBranch
 from .syntax_lexer import SyntaxLexer
 from .syntax_parser import SyntaxParser
@@ -75,5 +74,14 @@ class CommandDispatcher:
         else:
             raise UnknownCommandError('Unknown command')
 
-    def get_usage_lines(self) -> Iterable[str]:
-        return chain.from_iterable(command.get_usage_lines() for command in self._commands)
+    def get_usage_lines(self, separator: Optional[str] = None, max_width: int = 70, indent_width: int = 4) -> Iterable[str]:
+        lines = []
+
+        for command in self._commands:
+            lines += list(command.get_usage_lines())
+
+            if separator is not None:
+                lines.append(separator)
+
+        lines = lines[:-1]
+        return lines

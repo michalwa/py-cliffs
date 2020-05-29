@@ -43,7 +43,7 @@ def command_set_alarm(match: CallMatch):
 # Nothing can follow such parameters, anything after it will cause a `SyntaxError`.
 # 
 # You can pass parameters directly as arguments to a callback.
-@clifford.command('eval <expr...>')
+@clifford.command('eval <expr...>', description='Evaluates a given expression.')
 def command_eval(expr: List[str]):
 
     # Command callbacks can return values which will be passed to the caller of `dispatch()`
@@ -90,7 +90,7 @@ def command_show_help():
 
     # Use `get_usage_lines()` to automatically build a usage help message
     # `Command` objects can override their help messages
-    print('\n'.join(clifford.get_usage_lines()))
+    print('\n'.join(clifford.get_usage_lines(separator='')))
 
 
 # The decorator returns a `Command` object which you can manipulate

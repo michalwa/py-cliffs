@@ -3,6 +3,7 @@ from inspect import signature
 from .syntax_tree import StBranch
 from .call_lexer import CallLexer
 from .call_match import CallMatcher, CallMatch, CallMatchFail
+import textwrap
 
 
 class Command:
@@ -11,8 +12,7 @@ class Command:
         self.callback = callback
         self.lexer = kwargs['lexer'] if 'lexer' in kwargs else CallLexer()
         self.matcher = kwargs['matcher'] if 'matcher' in kwargs else CallMatcher()
-
-        self.usage_lines = [str(self.syntax)]
+        self.description = kwargs['description'] if 'description' in kwargs else None  # type: Optional[str]
 
     def match(self, call: str, match: CallMatch):
         match.tokens = list(self.lexer.tokenize(call))
@@ -31,5 +31,16 @@ class Command:
 
         return self.callback(**args)
 
-    def get_usage_lines(self) -> Iterable[str]:
-        return self.usage_lines
+    def get_usage_lines(self, max_width: int = 70, indent_width: int = 4) -> Iterable[str]:
+        for line in textwrap.wrap(str(self.syntax), width=max_width):
+            yield line
+
+        if self.description is not None:
+            wrap_options = {
+                'width': max_width,
+                'initial_indent': ' ' * indent_width,
+                'subsequent_indent': ' ' * indent_width
+            }
+
+            for line in textwrap.wrap(self.description, **wrap_options):
+                yield line
