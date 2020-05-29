@@ -78,10 +78,13 @@ class CommandDispatcher:
         lines = []
 
         for command in self._commands:
-            lines += list(command.get_usage_lines())
+            command_lines = list(command.get_usage_lines())
 
-            if separator is not None:
-                lines.append(separator)
+            if command_lines != []:
+                lines += command_lines
+
+                if separator is not None:
+                    lines.append(separator)
 
         lines = lines[:-1]
         return lines

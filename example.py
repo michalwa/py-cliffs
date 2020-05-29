@@ -79,7 +79,10 @@ def command_tell_time(now: datetime):
 @clifford.command('<n:int> times say <what>')
 def command_repeat(n: int, what: str):
     for _ in range(n):
-        print(what) 
+        print(what)
+
+# You can hide a command from help by setting its usage lines to an empty list
+command_repeat.get_usage_lines = lambda: []
 
 
 # All callback parameters are optional and indicate what the callback needs to recieve
