@@ -74,11 +74,11 @@ class CommandDispatcher:
         else:
             raise UnknownCommandError('Unknown command')
 
-    def get_usage_lines(self, separator: Optional[str] = None, max_width: int = 70, indent_width: int = 4) -> Iterable[str]:
+    def get_usage_lines(self, separator: Optional[str] = None, **kwargs) -> Iterable[str]:
         lines = []
 
         for command in self._commands:
-            command_lines = list(command.get_usage_lines())
+            command_lines = list(command.get_usage_lines(**kwargs))
 
             if command_lines != []:
                 lines += command_lines

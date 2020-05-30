@@ -31,7 +31,10 @@ class Command:
 
         return self.callback(**args)
 
-    def get_usage_lines(self, max_width: int = 70, indent_width: int = 4) -> Iterable[str]:
+    def get_usage_lines(self, **kwargs) -> Iterable[str]:
+        max_width = kwargs['max_width'] if 'max_width' in kwargs else 70
+        indent_width = kwargs['indent_width'] if 'indent_width' in kwargs else 4
+
         for line in textwrap.wrap(str(self.syntax), width=max_width):
             yield line
 

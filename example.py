@@ -64,7 +64,7 @@ def command_like_bread(negation: bool):
 
 
 # Command callbacks can also recieve additional arguments from the caller of `dispatch()`
-@clifford.command('tell time')
+@clifford.command('tell time', description='Tells the date and time')
 def command_tell_time(now: datetime):
     print(f"The time is {now}")
 
@@ -81,12 +81,13 @@ def command_repeat(n: int, what: str):
     for _ in range(n):
         print(what)
 
+# The decorator returns a `Command` object which you can manipulate
 # You can hide a command from help by setting its usage lines to an empty list
-command_repeat.get_usage_lines = lambda: []
+command_repeat.get_usage_lines = lambda **_: []
 
 
 # All callback parameters are optional and indicate what the callback needs to recieve
-@clifford.command('help', matcher=CallMatcher(case_sensitive=False))
+@clifford.command('help', matcher=CallMatcher(case_sensitive=False), description='Displays this help message')
 def command_show_help():
     print('Known commands')
     print('--------------')
@@ -94,10 +95,6 @@ def command_show_help():
     # Use `get_usage_lines()` to automatically build a usage help message
     # `Command` objects can override their help messages
     print('\n'.join(clifford.get_usage_lines(separator='')))
-
-
-# The decorator returns a `Command` object which you can manipulate
-command_show_help.get_usage_lines = lambda: ['help (case insensitive): Displays this help message']
 
 
 if __name__ == '__main__':

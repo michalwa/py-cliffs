@@ -1,7 +1,7 @@
 # py-clifford
 This is an implementation of [Clifford](https://github.com/michalwa/Clifford)
-(originally written in Java) for Python.
-Although this (preferred) implementation has much more functionality,
+(originally written in Java) for Python 3 (tested in 3.7.4).
+Although this implementation has much more functionality,
 it's still compliant with the original concept.
 
 **Clifford** is a command parsing utility useful for creating internal
