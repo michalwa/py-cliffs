@@ -86,6 +86,19 @@ def command_repeat(n: int, what: str):
 command_repeat.get_usage_lines = lambda **_: []
 
 
+# You can assign custom classes to specific commands
+class CustomCommandClass(Command):
+    def __init__(self, stx, callback, **kwargs):
+        super().__init__(stx, callback, **kwargs)
+
+    def execute(self, *args):
+        print('Bye!')
+        exit(0)
+
+@clifford.command('exit', command_class=CustomCommandClass)
+def command_exit(): pass
+
+
 # All callback parameters are optional and indicate what the callback needs to recieve
 @clifford.command('help', matcher=CallMatcher(case_sensitive=False), description='Displays this help message')
 def command_show_help():

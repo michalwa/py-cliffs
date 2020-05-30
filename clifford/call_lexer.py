@@ -21,6 +21,7 @@ class CallLexer:
             
             elif c == '\\':
                 if escape:
+                    # TODO: Add special escape characters
                     current += c
                 escape = not escape
 

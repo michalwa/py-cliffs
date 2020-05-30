@@ -1,4 +1,4 @@
-from typing import TypeVar, Optional, Dict, List, Iterable, Tuple, Callable, Any
+from typing import Type, TypeVar, Optional, Dict, List, Iterable, Tuple, Callable, Any
 from .syntax_tree import StBranch
 from .syntax_lexer import SyntaxLexer
 from .syntax_parser import SyntaxParser
@@ -9,7 +9,6 @@ from .command import Command
 
 # typedefs
 _T = TypeVar('_T')
-CommandCallbackDecorator = Callable[[Callable[..., _T]], Command]
 
 
 class CommandDispatchError(Exception):
@@ -23,16 +22,17 @@ class CommandDispatcher:
     def __init__(self, **kwargs):
         self._commands = []  # type: List[Command]
         self.syntax_parser = kwargs['syntax_parser'] if 'syntax_parser' in kwargs else SyntaxParser()
-        self.syntax_lexer  = kwargs['syntax_lexer'] if 'syntax_lexer' in kwargs else SyntaxLexer()
+        self.syntax_lexer = kwargs['syntax_lexer'] if 'syntax_lexer' in kwargs else SyntaxLexer()
 
     def register(self, command: Command) -> None:
         self._commands.append(command)
 
-    def command(self, syntax: str, **kwargs) -> CommandCallbackDecorator: 
+    def command(self, syntax: str, **kwargs) -> Callable[[Callable[..., _T]], Command]:
         st_root = self.syntax_parser.parse(self.syntax_lexer.tokenize(syntax))
+        command_class = kwargs['command_class'] if 'command_class' in kwargs else Command  # type: Type[Command]
 
         def decorator(f: Callable[..., _T]) -> Command:
-            cmd = Command(st_root, f, **kwargs)
+            cmd = command_class(st_root, f, **kwargs)
             self.register(cmd)
             return cmd
             
