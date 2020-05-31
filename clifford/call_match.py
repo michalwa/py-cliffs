@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Callable
+from typing import Any, List, Dict, Optional, Callable
 from .utils import loose_bool
 
 
@@ -44,7 +44,7 @@ class CallMatch:
 
         self.tokens = None  # type: Optional[List[str]]
         self.score = 0
-        self.params = {}  # type: Dict[str, object]
+        self.params = {}  # type: Dict[str, Any]
         self.opts = []  # type: List[bool]
         self.vars = []  # type: List[int]
         self.tail = []  # type: List[str]

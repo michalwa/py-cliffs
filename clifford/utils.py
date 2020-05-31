@@ -37,10 +37,7 @@ class StrBuffer:
 def loose_bool(s: str) -> bool:
     try:
         f = float(s)
-        if f == 1:
-            return True
-        elif f == 0:
-            return False
+        return bool(f)
     except:
         pass
 

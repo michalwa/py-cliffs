@@ -1,4 +1,4 @@
-from typing import Tuple, Callable, Iterable, Any
+from typing import Optional, Tuple, Callable, Iterable, Any
 from inspect import signature
 from .syntax_tree import StBranch
 from .call_lexer import CallLexer
@@ -12,7 +12,7 @@ class Command:
         self.callback = callback
         self.lexer = kwargs['lexer'] if 'lexer' in kwargs else CallLexer()
         self.matcher = kwargs['matcher'] if 'matcher' in kwargs else CallMatcher()
-        self.description = kwargs['description'] if 'description' in kwargs else None  # type: Optional[str]
+        self.description = kwargs.get('description', None)  # type: Optional[str]
 
     def match(self, call: str, match: CallMatch):
         match.tokens = list(self.lexer.tokenize(call))
@@ -32,8 +32,8 @@ class Command:
         return self.callback(**args)
 
     def get_usage_lines(self, **kwargs) -> Iterable[str]:
-        max_width = kwargs['max_width'] if 'max_width' in kwargs else 70
-        indent_width = kwargs['indent_width'] if 'indent_width' in kwargs else 4
+        max_width = kwargs.get('max_width', 70)
+        indent_width = kwargs.get('indent_width', 4)
 
         for line in textwrap.wrap(str(self.syntax), width=max_width):
             yield line

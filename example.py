@@ -1,5 +1,5 @@
 import sys
-from typing import Optional, List
+from typing import Optional, List, Iterable
 from datetime import datetime
 from time import struct_time, strptime, strftime
 from clifford import *
@@ -30,7 +30,7 @@ def command_set_alarm(match: CallMatch):
     time = match.params['time']  # type: struct_time
     message = match.params['message'] if match.opts[1] else None  # type: Optional[str]
     # Get variant index
-    am_pm = ['am', 'pm'][match.vars[0]]  # type: int
+    am_pm = ['am', 'pm'][match.vars[0]]  # type: str
 
     # Print something out
     t = 'Setting ' + ('a loud ' if loud else 'an ') + 'alarm at ' + strftime('%I:%M', time) + ' ' + am_pm.upper()
@@ -69,6 +69,14 @@ def command_tell_time(now: datetime):
     print(f"The time is {now}")
 
 
+# You can assign custom classes to specific commands
+class HiddenCommand(Command):
+    def __init__(self, stx, callback, **kwargs):
+        super().__init__(stx, callback, **kwargs)
+
+    def get_usage_lines(self, **kwargs) -> Iterable[str]:
+        return []
+
 # Commands don't have to start with a literal.
 # 
 # Keep in mind though that when matching fails, the most likely command will be guessed
@@ -76,27 +84,16 @@ def command_tell_time(now: datetime):
 # 
 # For example, when calling: `6 alarm at`, even though more tokens match the
 # "set alarm at ..." command, the command below will be reported as missing arguments.
-@clifford.command('<n:int> times say <what>')
+@clifford.command('<n:int> times say <what>', command_class=HiddenCommand)
 def command_repeat(n: int, what: str):
     for _ in range(n):
         print(what)
 
-# The decorator returns a `Command` object which you can manipulate
-# You can hide a command from help by setting its usage lines to an empty list
-command_repeat.get_usage_lines = lambda **_: []
 
-
-# You can assign custom classes to specific commands
-class CustomCommandClass(Command):
-    def __init__(self, stx, callback, **kwargs):
-        super().__init__(stx, callback, **kwargs)
-
-    def execute(self, *args):
-        print('Bye!')
-        exit(0)
-
-@clifford.command('exit', command_class=CustomCommandClass)
-def command_exit(): pass
+@clifford.command('exit')
+def command_exit():
+    print("Bye!")
+    exit(0)
 
 
 # All callback parameters are optional and indicate what the callback needs to recieve
