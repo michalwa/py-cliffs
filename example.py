@@ -55,12 +55,13 @@ def command_eval(expr: List[str]):
 # Note that if you assign an identifier to a group, its state won't be present in the
 # index-based array (`opts` or `vars`).
 # These identifiers will not be displayed in the usage help.
-@clifford.command("i [don't]:negation like bread")
-def command_like_bread(negation: bool):
+@clifford.command("i [don't]:negation like (bread|cheese):food")
+def command_like_bread(negation: bool, food: int):
+    food_name = ['bread', 'cheese'][food]
     if not negation:
-        print('I like bread too')
+        print(f'I like {food_name} too')
     else:
-        print("I don't like bread either")
+        print(f"I don't like {food_name} either")
 
 
 # Command callbacks can also recieve additional arguments from the caller of `dispatch()`

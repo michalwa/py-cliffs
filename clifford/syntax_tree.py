@@ -60,9 +60,10 @@ class StBranch(StLeaf):
         return len(self.children)
 
 
-# Superclass for any branch that can be assigned an identifier
+# Mixin class for any branch that can be assigned an identifier
 class StIdentifiable:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.identifier = None  # type: Optional[str]
 
 
@@ -136,7 +137,7 @@ class StSequence(StBranch):
         return tokens
 
 
-class StOptSequence(StBranch, StIdentifiable):
+class StOptSequence(StIdentifiable, StBranch):
     node_name = 'opt_sequence'
     
     def __init__(self):
@@ -169,7 +170,7 @@ class StOptSequence(StBranch, StIdentifiable):
         return tokens_temp
 
 
-class StVarGroup(StBranch, StIdentifiable):
+class StVarGroup(StIdentifiable, StBranch):
     node_name = 'var_group'
     
     def __init__(self):
