@@ -63,11 +63,11 @@ class CommandDispatcher:
                     best_fail = fail
 
         # If the highest-scoring match was successful, execute the command
-        if best_command is not None:
+        if best_succ_match is not None and best_command is not None:
             return best_command.execute(best_succ_match, callback_args)
 
         # Otherwise raise the error from the highest-scoring match
-        elif best_fail_match.score > 0:
+        elif best_fail_match is not None and best_fail_match.score > 0 and best_fail is not None:
             raise best_fail
 
         # Or unknown command error if it's 0
@@ -77,14 +77,13 @@ class CommandDispatcher:
     def get_usage_lines(self, separator: Optional[str] = None, **kwargs) -> Iterable[str]:
         lines = []
 
-        for command in self._commands:
+        for i, command in enumerate(self._commands):
             command_lines = list(command.get_usage_lines(**kwargs))
 
             if command_lines != []:
-                lines += command_lines
-
-                if separator is not None:
+                if separator is not None and i > 0:
                     lines.append(separator)
 
-        lines = lines[:-1]
+                lines += command_lines
+
         return lines

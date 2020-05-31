@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple
+from typing import cast, Iterable, Tuple
 from .syntax_tree import *
 
 
@@ -45,7 +45,8 @@ class SyntaxParser:
 
                 # Group identifiers
                 elif state == 'BEFORE_IDENTIFIER':
-                    current.last_child.identifier = symbols.register(token_value)
+                    group = cast(StIdentifiable, current.last_child)
+                    group.identifier = symbols.register(token_value)
                     state = 'NORMAL'
 
                 # Literals
@@ -54,8 +55,9 @@ class SyntaxParser:
 
             # Tail ellipsis
             elif token_type == 'ellipsis':
-                if state != 'AFTER_PARAM_NAME':
+                if state != 'AFTER_PARAM_NAME' or param_name is None:
                     raise SyntaxError("Unexpected ellipsis '...'")
+
                 current.append_child(StTail(param_name))
                 state = 'AFTER_TAIL'
 
@@ -74,7 +76,7 @@ class SyntaxParser:
                         state = 'BEFORE_PARAM_TYPE'
 
                     # Group identifier separator
-                    elif state == 'NORMAL' and hasattr(current.last_child, 'identifier'):
+                    elif state == 'NORMAL' and isinstance(current.last_child, StIdentifiable):
                         state = 'BEFORE_IDENTIFIER'
 
                     else:
@@ -115,7 +117,8 @@ class SyntaxParser:
                     if current.num_children() == 0:
                         raise SyntaxError('Empty optional sequence')
 
-                    current = current.parent
+                    if current.parent is not None:
+                        current = current.parent
 
                 # Opening variant group delimiter
                 elif token_value == '(':
@@ -147,12 +150,13 @@ class SyntaxParser:
                     if current.num_children() == 0:
                         raise SyntaxError('Empty variant')
 
-                    current = current.parent.parent
+                    if current.parent is not None and current.parent.parent is not None:
+                        current = current.parent.parent
 
         # Check for unterminated expressions
         if current is not root:
             path = current.node_name
-            while current.parent is not root:
+            while current.parent is not root and current.parent is not None:
                 current = current.parent
                 path = f'{current.node_name} > {path}'
             raise SyntaxError(f'Unterminated expression: {path}')

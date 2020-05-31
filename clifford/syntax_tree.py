@@ -60,6 +60,12 @@ class StBranch(StLeaf):
         return len(self.children)
 
 
+# Superclass for any branch that can be assigned an identifier
+class StIdentifiable:
+    def __init__(self):
+        self.identifier = None  # type: Optional[str]
+
+
 class StLiteral(StLeaf):
     node_name = 'literal'
 
@@ -130,12 +136,11 @@ class StSequence(StBranch):
         return tokens
 
 
-class StOptSequence(StBranch):
+class StOptSequence(StBranch, StIdentifiable):
     node_name = 'opt_sequence'
     
-    def __init__(self, identifier: Optional[str] = None):
+    def __init__(self):
         super().__init__()
-        self.identifier = identifier
 
     def __str__(self) -> str:
         children = ' '.join(str(child) for child in self.children)
@@ -164,12 +169,11 @@ class StOptSequence(StBranch):
         return tokens_temp
 
 
-class StVarGroup(StBranch):
+class StVarGroup(StBranch, StIdentifiable):
     node_name = 'var_group'
     
-    def __init__(self, identifier: Optional[str] = None):
+    def __init__(self):
         super().__init__()
-        self.identifier = identifier
 
     def append_child(self, child):
         if not isinstance(child, StSequence):
@@ -202,14 +206,14 @@ class StVarGroup(StBranch):
 class StTail(StLeaf):
     node_name = 'tail'
 
-    def __init__(self, identifier: str):
+    def __init__(self, name: str):
         super().__init__()
-        self.identifier = identifier
+        self.name = name
 
     def __str__(self) -> str:
-        return f"<{self.identifier}...>"
+        return f"<{self.name}...>"
 
     def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
-        match.params[self.identifier] = tokens
+        match.params[self.name] = tokens
         match.terminated = True  # Disallow further elements to be matched
         return []
