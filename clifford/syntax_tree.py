@@ -1,32 +1,71 @@
-from typing import List, Iterable, Callable, Optional
+from typing import Any, List, Iterable, Callable, Optional
 from .call_match import CallMatcher, CallMatch, CallMatchFail
 
 
+# TODO: Merge StLeaf and StBranch into StNode
+
 class StLeaf:
+    """A leaf node in a syntax tree (has no children)"""
+
     node_name = 'leaf'
 
     def __init__(self):
         self.parent = None  # type: Optional[StBranch]
 
+    # TODO: Change debug to __repr__?
+
     def debug(self) -> str:
         return self.node_name
 
-    def traverse(self, callback: Callable[['StLeaf'], None]) -> None:
+    def traverse(self, callback: Callable[['StLeaf'], Any]) -> None:
+        """Recursively traverses the descendants of the node calling the callback
+        with each individual descendant (including this node itself).
+
+        Parameters
+        ----------
+          * callback: `(StNode) -> *` - The callback to call with each descendant.
+        """
         callback(self)
 
     def iter_traverse(self) -> Iterable['StLeaf']:
+        """Recursively constructs an iterator that will traverse the descendants
+        of this node (including this node itself).
+
+        Returns
+        ------
+          * `Iterable[StLeaf]`: This node and its descendants.
+        """
         yield self
 
     def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+        """This method is proxied by `match_call` which does additional checks
+        before passing to this method. Refer to the documentation of `match_call`
+        for more information.
+        """
         return tokens
 
     def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+        """Tries to parse the given call tokens into the given match instance.
+
+        Parameters
+        ----------
+          * tokens: `List[str]` - The tokens to parse.
+          * matcher: `CallMatcher` - The matcher to use.
+          * match: `CallMatch` - The match to populate.
+
+        Returns
+        -------
+          * `List[str]`: The tokens left for further matching by other nodes.
+        """
+
         if match.terminated:
             raise SyntaxError(f"Tried matching {self.node_name} after matching was terminated")
         return self._match_call(tokens, matcher, match)
 
 
 class StBranch(StLeaf):
+    """A branch syntax tree node"""
+
     node_name = 'branch'
 
     def __init__(self):
@@ -60,17 +99,30 @@ class StBranch(StLeaf):
         return len(self.children)
 
 
-# Mixin class for any branch that can be assigned an identifier
 class StIdentifiable:
+    """Mixin class for any node that can be assigned an identifier"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.identifier = None  # type: Optional[str]
 
 
 class StLiteral(StLeaf):
+    """A literal command token.
+
+    A token **must** be present in the command call to match a literal.
+    """
+
     node_name = 'literal'
 
     def __init__(self, value: str):
+        """Initializes a literal node.
+
+        Parameters
+        ----------
+          * value: `str` - The contents of the literal.
+        """
+
         super().__init__()
         self.value = value
 
@@ -81,7 +133,7 @@ class StLiteral(StLeaf):
         return f'literal("{self.value}")'
 
     def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
-        if len(tokens) < 1 or not matcher.compare_literal(tokens[0], self.value):
+        if len(tokens) < 1 or not matcher.match_literal(self.value, tokens[0]):
             raise CallMatchFail(f'Literal "{self.value}" not present')
 
         match.score += 1
@@ -89,9 +141,25 @@ class StLiteral(StLeaf):
 
 
 class StParam(StLeaf):
+    """A command parameter.
+
+    Any token present in place of the parameter will be stored as the value
+    of that parameter in the match.
+
+    Parameters may also specify types that will be checked upon matching.
+    """
+
     node_name = 'param'
 
     def __init__(self, name: str, typename: Optional[str] = None):
+        """Initializes a parameter node.
+
+        Parameters
+        ----------
+          * name: `str` - The name of the parameter.
+          * typename: `str` (optional) - The name of the type to parse. Defaults to string.
+        """
+
         super().__init__()
         self.name = name
         self.typename = typename
@@ -127,6 +195,11 @@ does not match type '{self.typename}'")
 
 
 class StSequence(StBranch):
+    """A simple sequence of syntax nodes.
+
+    For a sequence to be matched by tokens, all child nodes must be matched.
+    """
+
     node_name = 'sequence'
 
     def __str__(self) -> str:
@@ -139,6 +212,12 @@ class StSequence(StBranch):
 
 
 class StOptSequence(StIdentifiable, StBranch):
+    """An optional sequence.
+
+    An optional sequence will attempt to match its child nodes against the call,
+    but will not interrupt parsing if it doesn't succeed.
+    """
+
     node_name = 'opt_sequence'
 
     def __init__(self):
@@ -172,6 +251,12 @@ class StOptSequence(StIdentifiable, StBranch):
 
 
 class StVarGroup(StIdentifiable, StBranch):
+    """A variant group.
+
+    A variant group contains variants (sequences) either of which must be matched
+    for the group to successfully match.
+    """
+
     node_name = 'var_group'
 
     def __init__(self):
@@ -206,6 +291,12 @@ class StVarGroup(StIdentifiable, StBranch):
 
 
 class StTail(StLeaf):
+    """A tail parameter.
+
+    A tail parameter collects all leftover tokens (thus it must be the last node
+    in any syntax specification; nodes matched after a tail are not allowed).
+    """
+
     node_name = 'tail'
 
     def __init__(self, name: str):

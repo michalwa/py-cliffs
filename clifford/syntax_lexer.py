@@ -3,7 +3,22 @@ from .utils import StrBuffer
 
 
 class SyntaxLexer:
+    """Splits syntax specification strings into tokens."""
+
     def tokenize(self, spec: str) -> Iterable[Tuple[str, str]]:
+        """Splits the specified syntax specification into tokens.
+
+        Parameters
+        ----------
+          * spec: `str` - The specification string to tokenize.
+
+        Returns
+        -------
+          * `Iterable[(str, str)]`: The resulting tokens. Each token is a pair of
+            two strings: the type of the token (`symbol`, `delim` or `ellipsis`)
+            and the value of the token (varies depending on the type).
+        """
+
         current = StrBuffer()
 
         for c in spec + ' ':

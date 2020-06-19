@@ -3,10 +3,29 @@ from .syntax_tree import StBranch, StSequence, StLiteral, StParam, StOptSequence
 
 
 class SymbolList:
+    """Manages symbols used in a command syntax specification."""
+
     def __init__(self):
         self.symbols = []
 
     def register(self, symbol: str) -> str:
+        """Registers a symbol and returns the identifier to be used in place of
+        the symbol (can just be the symbol itself).
+
+        Parameters
+        ----------
+          * symbol: `str` - The symbol to register.
+
+        Returns
+        -------
+          * `str`: The idenfier to use in place of the symbol.
+
+        Raises
+        ------
+          * `SyntaxError` when the symbol has already been used or cannot be used
+            for some other reason.
+        """
+
         if symbol in self.symbols:
             raise SyntaxError(f"Symbol '{symbol}' used more than once")
         self.symbols.append(symbol)
@@ -14,7 +33,27 @@ class SymbolList:
 
 
 class SyntaxParser:
+    """Parses syntax specification strings into syntax trees which serve the
+    function of recursive parsers for command calls."""
+
+    # TODO: Configurable SymbolList class
+
     def parse(self, tokens: Iterable[Tuple[str, str]]) -> StBranch:
+        """Parses the given sequence of tokens into a syntax tree.
+
+        Parameters
+        ----------
+          * tokens: `Iterable[Tuple[str, str]]` - The tokens to parse.
+
+        Returns
+        -------
+          * `StBranch`: The root of the parsed syntax tree.
+
+        Raises
+        ------
+          * `SyntaxError` when there is an error in the specification.
+        """
+
         root = StSequence()
         current = root  # type: StBranch
 

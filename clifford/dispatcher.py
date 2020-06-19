@@ -10,27 +10,62 @@ _T = TypeVar('_T')
 
 
 class CommandDispatchError(Exception):
-    '''Raised by the dispatcher when something goes wrong'''
+    """Raised by the dispatcher when something goes wrong"""
 
 
 class UnknownCommandError(CommandDispatchError):
-    '''Raised by the dispatcher when an unknown command is called'''
+    """Raised by the dispatcher when an unknown command is called"""
 
 
 class CommandDispatcher:
+    """Manages registered commands, allows registering new commands.
+    Controls the dispatch of command calls.
+    """
+
     def __init__(self, **kwargs):
+        """Initializes a dispatcher.
+
+        Keyword arguments
+        -----------------
+          * syntax_parser: `SyntaxParser` - The syntax parser to use to parse new commands.
+          * syntax_lexer: `SyntaxLexer` - The lexer to use to
+        """
+
         self._commands = []  # type: List[Command]
         self.syntax_parser = kwargs['syntax_parser'] if 'syntax_parser' in kwargs else SyntaxParser()
         self.syntax_lexer = kwargs['syntax_lexer'] if 'syntax_lexer' in kwargs else SyntaxLexer()
 
     def register(self, command: Command) -> None:
+        """Registers the given command.
+
+        Parameters
+        ----------
+          * command: `Command` - The command to register.
+        """
         self._commands.append(command)
 
-    def command(self, syntax: str, **kwargs) -> Callable[[Callable[..., _T]], Command]:
+    def command(self, syntax: str, **kwargs) -> Callable[[Callable], Command]:
+        """(decorator)
+        Registers a command with the specified syntax and the annotated function
+        as the callback.
+
+        Parameters
+        ----------
+          * syntax: `str` - The syntax for the command.
+
+        Keyword arguments
+        -----------------
+          * command_class: `Type[Command]` - The class to instantiate for this command.
+
+        Returns
+        -------
+          * `Command`: The constructed, registered command.
+        """
+
         st_root = self.syntax_parser.parse(self.syntax_lexer.tokenize(syntax))
         command_class = kwargs['command_class'] if 'command_class' in kwargs else Command  # type: Type[Command]
 
-        def decorator(f: Callable[..., _T]) -> Command:
+        def decorator(f: Callable) -> Command:
             cmd = command_class(st_root, f, **kwargs)
             self.register(cmd)
             return cmd
@@ -38,6 +73,27 @@ class CommandDispatcher:
         return decorator
 
     def dispatch(self, call: str, **callback_args) -> Any:
+        """Tries to dispatch the given command calls to the appropriate command.
+
+        All keyword arguments will be passed as additional arguments to the
+        appropriate callback.
+
+        Parameters
+        ----------
+          * call: `str` - The call to process and dispatch.
+
+        Returns
+        -------
+          * `*`: Whatever the callback of the matched command returns.
+
+        Raises
+        ------
+          * `CallMatchFail` of the best-matched command when no command fully
+            matches the call.
+          * `UnknownCommandError` when no appropriate command can be determined
+            based on the tokens of the call.
+        """
+
         best_succ_match = None  # Highest-scoring successful match
         best_command = None     # Command having the highest-scoring successful match
         best_fail_match = None  # Highest-scoring failed match
@@ -72,6 +128,19 @@ class CommandDispatcher:
             raise UnknownCommandError('Unknown command')
 
     def get_usage_lines(self, separator: Optional[str] = None, **kwargs) -> Iterable[str]:
+        """Returns the message composed of usage help messages of registered commands
+        as individual lines.
+
+        Parameters
+        ----------
+          * separator: `str` (optional) - The separator to use to separate blocks
+            of lines returned by individual commands. Defaults to None.
+
+        Returns
+        -------
+          * `Iterable[str]`: The individual lines of the usage help message.
+        """
+
         lines = []
 
         for i, command in enumerate(self._commands):
