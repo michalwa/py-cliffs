@@ -1,5 +1,5 @@
 from typing import cast, Iterable, Tuple
-from .syntax_tree import *
+from .syntax_tree import StBranch, StSequence, StLiteral, StParam, StOptSequence, StVarGroup, StIdentifiable, StTail
 
 
 class SymbolList:
@@ -133,7 +133,11 @@ class SyntaxParser:
 
                 # Variant group sequence separator
                 elif token_value == '|':
-                    if state != 'NORMAL' or not isinstance(current, StSequence) or not isinstance(current.parent, StVarGroup):
+                    if any([
+                        state != 'NORMAL',
+                        not isinstance(current, StSequence),
+                        not isinstance(current.parent, StVarGroup)
+                    ]):
                         raise SyntaxError("Unexpected variant separator '|'")
                     if current.num_children() == 0:
                         raise SyntaxError('Empty variant')
@@ -145,7 +149,11 @@ class SyntaxParser:
 
                 # Closing variant group delimiter
                 elif token_value == ')':
-                    if state != 'NORMAL' and not isinstance(current, StSequence) or not isinstance(current.parent, StVarGroup):
+                    if any([
+                        state != 'NORMAL',
+                        not isinstance(current, StSequence),
+                        not isinstance(current.parent, StVarGroup)
+                    ]):
                         raise SyntaxError("Unexpected variant group closing delimiter ')'")
                     if current.num_children() == 0:
                         raise SyntaxError('Empty variant')

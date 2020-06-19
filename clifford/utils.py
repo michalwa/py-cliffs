@@ -38,7 +38,7 @@ def loose_bool(s: str) -> bool:
     try:
         f = float(s)
         return bool(f)
-    except:
+    except ValueError:
         pass
 
     s = s.lower()
@@ -46,6 +46,6 @@ def loose_bool(s: str) -> bool:
         return True
     elif s in ['n', 'no', 'f', 'false', 'dont']:
         return False
-        
+
     else:
         raise ValueError(f"String '{s}' cannot be loosely casted to a boolean")

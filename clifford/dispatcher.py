@@ -1,11 +1,9 @@
-from typing import Type, TypeVar, Optional, Dict, List, Iterable, Tuple, Callable, Any
-from .syntax_tree import StBranch
+from typing import Any, Callable, Iterable, List, Optional, Type, TypeVar
+
+from .call_match import CallMatch, CallMatchFail
+from .command import Command
 from .syntax_lexer import SyntaxLexer
 from .syntax_parser import SyntaxParser
-from .call_lexer import CallLexer
-from .call_match import CallMatcher, CallMatch, CallMatchFail
-from .command import Command
-
 
 # typedefs
 _T = TypeVar('_T')
@@ -13,6 +11,7 @@ _T = TypeVar('_T')
 
 class CommandDispatchError(Exception):
     '''Raised by the dispatcher when something goes wrong'''
+
 
 class UnknownCommandError(CommandDispatchError):
     '''Raised by the dispatcher when an unknown command is called'''
@@ -35,7 +34,7 @@ class CommandDispatcher:
             cmd = command_class(st_root, f, **kwargs)
             self.register(cmd)
             return cmd
-            
+
         return decorator
 
     def dispatch(self, call: str, **callback_args) -> Any:
@@ -56,8 +55,6 @@ class CommandDispatcher:
                     best_command = command
 
             except CallMatchFail as fail:
-                temp_fail = fail
-                
                 if best_fail_match is None or match.score > best_fail_match.score:
                     best_fail_match = match
                     best_fail = fail

@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Callable, Iterable, Any
+from typing import Optional, Callable, Iterable, Any
 from inspect import signature
 from .syntax_tree import StBranch
 from .call_lexer import CallLexer
@@ -21,7 +21,7 @@ class Command:
         if len(left) > 0:
             raise CallMatchFail('Too many arguments')
 
-    def execute(self, match: CallMatch, callback_args = {}) -> object:
+    def execute(self, match: CallMatch, callback_args={}) -> object:
 
         # Pass only those args that are required by the callback signature
         sig = signature(self.callback)

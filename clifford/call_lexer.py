@@ -18,10 +18,9 @@ class CallLexer:
                         current += c
                     else:
                         yield current.flush()
-            
+
             elif c == '\\':
                 if escape:
-                    # TODO: Add special escape characters
                     current += c
                 escape = not escape
 

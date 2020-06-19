@@ -15,7 +15,7 @@ class CallMatcher:
         self._types = {}  # type: Dict[str, StrConstructor]
 
         self.case_sensitive = case_sensitive
-        
+
         self.register_type(str)
         self.register_type(int)
         self.register_type(float)
@@ -27,7 +27,7 @@ class CallMatcher:
         self._types[name] = constructor
 
     def get_type(self, name: str) -> StrConstructor:
-        if not name in self._types:
+        if name not in self._types:
             raise SyntaxError(f"Undefined type '{name}'")
         return self._types[name]
 

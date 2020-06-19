@@ -1,4 +1,4 @@
-from typing import List, Tuple, Iterable, Callable, Optional
+from typing import List, Iterable, Callable, Optional
 from .call_match import CallMatcher, CallMatch, CallMatchFail
 
 
@@ -114,7 +114,8 @@ class StParam(StLeaf):
             try:
                 value = constr(tokens[0])
             except ValueError:
-                raise CallMatchFail(f"Argument '{tokens[0]}' for parameter '{self.name}' does not match type '{self.typename}'")
+                raise CallMatchFail(f"Argument '{tokens[0]}' for parameter '{self.name}' \
+does not match type '{self.typename}'")
 
         # Type defaults to string
         else:
@@ -139,7 +140,7 @@ class StSequence(StBranch):
 
 class StOptSequence(StIdentifiable, StBranch):
     node_name = 'opt_sequence'
-    
+
     def __init__(self):
         super().__init__()
 
@@ -172,7 +173,7 @@ class StOptSequence(StIdentifiable, StBranch):
 
 class StVarGroup(StIdentifiable, StBranch):
     node_name = 'var_group'
-    
+
     def __init__(self):
         super().__init__()
 
@@ -200,7 +201,7 @@ class StVarGroup(StIdentifiable, StBranch):
                 return tokens_temp
             except CallMatchFail:
                 pass
-            
+
         raise CallMatchFail('No variant present')
 
 

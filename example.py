@@ -1,4 +1,3 @@
-import sys
 from typing import Optional, List, Iterable
 from datetime import datetime
 from time import struct_time, strptime, strftime
@@ -17,7 +16,7 @@ def command_set_alarm(match: CallMatch):
 
     # The callback recieves a `match` object describing the configuration
     # of the command matched by the call. The object has the following properties:
-    # 
+    #
     #   match.tokens      - the full tokenized call
     #   match[param_name] - value of the specified parameter
     #   match.opt(i)      - boolean indicating whether the i-th optional sequence is present
@@ -41,7 +40,7 @@ def command_set_alarm(match: CallMatch):
 
 # Tail parameters (`...`) collect all remaining tokens from the command call.
 # Nothing can follow such parameters, anything after it will cause a `SyntaxError`.
-# 
+#
 # You can pass parameters directly as arguments to a callback.
 @clifford.command('eval <expr...>', description='Evaluates a given expression.')
 def command_eval(expr: List[str]):
@@ -78,11 +77,12 @@ class HiddenCommand(Command):
     def get_usage_lines(self, **kwargs) -> Iterable[str]:
         return []
 
+
 # Commands don't have to start with a literal.
-# 
+#
 # Keep in mind though that when matching fails, the most likely command will be guessed
 # based on the beginning portion of the match.
-# 
+#
 # For example, when calling: `6 alarm at`, even though more tokens match the
 # "set alarm at ..." command, the command below will be reported as missing arguments.
 @clifford.command('<n:int> times say <what>', command_class=HiddenCommand)
