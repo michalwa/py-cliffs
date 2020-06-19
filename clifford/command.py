@@ -1,6 +1,6 @@
 from typing import Optional, Callable, Iterable
 from inspect import signature
-from .syntax_tree import StBranch
+from .syntax_tree import StNode
 from .call_lexer import CallLexer
 from .call_match import CallMatcher, CallMatch, CallMatchFail
 import textwrap
@@ -9,12 +9,12 @@ import textwrap
 class Command:
     """Matches command calls against its syntax and controls callback dispatch."""
 
-    def __init__(self, syntax: StBranch, callback: Callable, **kwargs):
+    def __init__(self, syntax: StNode, callback: Callable, **kwargs):
         """Initializes a command.
 
         Parameters
         ----------
-          * syntax: `StBranch` - The root of the syntax tree for this command.
+          * syntax: `StNode` - The root of the syntax tree for this command.
           * callback: `(...) -> *` - The callback.
         """
 

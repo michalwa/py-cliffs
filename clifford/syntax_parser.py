@@ -1,5 +1,5 @@
-from typing import cast, Iterable, Tuple
-from .syntax_tree import StBranch, StSequence, StLiteral, StParam, StOptSequence, StVarGroup, StIdentifiable, StTail
+from typing import cast, Type, Iterable, Tuple
+from .syntax_tree import StNode, StSequence, StLiteral, StParam, StOptSequence, StVarGroup, StIdentifiable, StTail
 
 
 class SymbolList:
@@ -36,9 +36,17 @@ class SyntaxParser:
     """Parses syntax specification strings into syntax trees which serve the
     function of recursive parsers for command calls."""
 
-    # TODO: Configurable SymbolList class
+    def __init__(self, **kwargs):
+        """Initializes a syntax specification parser.
 
-    def parse(self, tokens: Iterable[Tuple[str, str]]) -> StBranch:
+        Keyword arguments
+        -----------------
+          * symbol_list_class: `Type[SymbolList]` - The symbol list class to use when parsing.
+        """
+
+        self.symbol_list_class = kwargs.get('symbol_list_class', SymbolList)  # type: Type[SymbolList]
+
+    def parse(self, tokens: Iterable[Tuple[str, str]]) -> StNode:
         """Parses the given sequence of tokens into a syntax tree.
 
         Parameters
@@ -47,7 +55,7 @@ class SyntaxParser:
 
         Returns
         -------
-          * `StBranch`: The root of the parsed syntax tree.
+          * `StNode`: The root of the parsed syntax tree.
 
         Raises
         ------
@@ -55,9 +63,9 @@ class SyntaxParser:
         """
 
         root = StSequence()
-        current = root  # type: StBranch
+        current = root  # type: StNode
 
-        symbols = SymbolList()
+        symbols = self.symbol_list_class()
 
         state = 'NORMAL'
         param_name = None
@@ -145,7 +153,7 @@ class SyntaxParser:
                     if state != 'NORMAL':
                         raise SyntaxError("Unexpected optional sequence opening delimiter '['")
 
-                    child = StOptSequence()  # type: StBranch
+                    child = StOptSequence()  # type: StNode
                     current.append_child(child)
                     current = child
 

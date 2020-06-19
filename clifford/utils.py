@@ -69,13 +69,13 @@ def loose_bool(s: str) -> bool:
       * `ValueError` when the boolean value can't be determined.
     """
 
+    s = s.strip()
+
     try:
         f = float(s)
         return bool(f)
     except ValueError:
         pass
-
-    # TODO: Trim the string
 
     s = s.lower()
     if s in ['y', 'yes', 't', 'true', 'do', 'ok', 'sure', 'alright']:

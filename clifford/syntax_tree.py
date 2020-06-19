@@ -2,22 +2,34 @@ from typing import Any, List, Iterable, Callable, Optional
 from .call_match import CallMatcher, CallMatch, CallMatchFail
 
 
-# TODO: Merge StLeaf and StBranch into StNode
+class StNode:
+    """A node in a syntax tree"""
 
-class StLeaf:
-    """A leaf node in a syntax tree (has no children)"""
-
-    node_name = 'leaf'
+    node_name = 'node'
 
     def __init__(self):
-        self.parent = None  # type: Optional[StBranch]
+        self.parent = None  # type: Optional[StNode]
+        self.children = []  # type: List[StNode]
 
-    # TODO: Change debug to __repr__?
+    def __repr__(self) -> str:
+        r = f'{self.node_name}'
+        if self.children != []:
+            r += '[' + ', '.join(repr(child) for child in self.children) + ']'
+        return r
 
-    def debug(self) -> str:
-        return self.node_name
+    @property
+    def last_child(self) -> Optional['StNode']:
+        return self.children[-1] if len(self.children) > 0 else None
 
-    def traverse(self, callback: Callable[['StLeaf'], Any]) -> None:
+    def append_child(self, child: 'StNode') -> 'StNode':
+        self.children.append(child)
+        child.parent = self
+        return self
+
+    def num_children(self) -> int:
+        return len(self.children)
+
+    def traverse(self, callback: Callable[['StNode'], Any]) -> None:
         """Recursively traverses the descendants of the node calling the callback
         with each individual descendant (including this node itself).
 
@@ -25,17 +37,24 @@ class StLeaf:
         ----------
           * callback: `(StNode) -> *` - The callback to call with each descendant.
         """
-        callback(self)
 
-    def iter_traverse(self) -> Iterable['StLeaf']:
+        callback(self)
+        for child in self.children:
+            child.traverse(callback)
+
+    def iter_traverse(self) -> Iterable['StNode']:
         """Recursively constructs an iterator that will traverse the descendants
         of this node (including this node itself).
 
         Returns
         ------
-          * `Iterable[StLeaf]`: This node and its descendants.
+          * `Iterable[StNode]`: This node and its descendants.
         """
+
         yield self
+        for child in self.children:
+            for leaf in child.iter_traverse():
+                yield leaf
 
     def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
         """This method is proxied by `match_call` which does additional checks
@@ -63,40 +82,11 @@ class StLeaf:
         return self._match_call(tokens, matcher, match)
 
 
-class StBranch(StLeaf):
-    """A branch syntax tree node"""
+class StLeaf(StNode):
+    """A node that cannot have children"""
 
-    node_name = 'branch'
-
-    def __init__(self):
-        super().__init__()
-        self.children = []  # type: List[StLeaf]
-
-    def debug(self) -> str:
-        return f'{self.node_name}[' + ', '.join(child.debug() for child in self.children) + ']'
-
-    def append_child(self, child: StLeaf) -> 'StBranch':
-        self.children.append(child)
-        child.parent = self
-        return self
-
-    @property
-    def last_child(self) -> Optional[StLeaf]:
-        return self.children[-1] if len(self.children) > 0 else None
-
-    def traverse(self, callback: Callable[[StLeaf], None]) -> None:
-        callback(self)
-        for child in self.children:
-            child.traverse(callback)
-
-    def iter_traverse(self) -> Iterable[StLeaf]:
-        yield self
-        for child in self.children:
-            for leaf in child.iter_traverse():
-                yield leaf
-
-    def num_children(self) -> int:
-        return len(self.children)
+    def append_child(self, child: 'StNode') -> 'StNode':
+        raise ValueError(f"Node of type {self.node_name} cannot have children")
 
 
 class StIdentifiable:
@@ -194,7 +184,7 @@ does not match type '{self.typename}'")
         return tokens[1:]
 
 
-class StSequence(StBranch):
+class StSequence(StNode):
     """A simple sequence of syntax nodes.
 
     For a sequence to be matched by tokens, all child nodes must be matched.
@@ -211,7 +201,7 @@ class StSequence(StBranch):
         return tokens
 
 
-class StOptSequence(StIdentifiable, StBranch):
+class StOptSequence(StIdentifiable, StNode):
     """An optional sequence.
 
     An optional sequence will attempt to match its child nodes against the call,
@@ -250,7 +240,7 @@ class StOptSequence(StIdentifiable, StBranch):
         return tokens_temp
 
 
-class StVarGroup(StIdentifiable, StBranch):
+class StVarGroup(StIdentifiable, StNode):
     """A variant group.
 
     A variant group contains variants (sequences) either of which must be matched

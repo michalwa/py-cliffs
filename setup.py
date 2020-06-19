@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name='clifford',
-    version='1.4.5',
+    version='1.4.6',
     license='MIT',
     description='Command parser utility',
     long_description=long_description,
