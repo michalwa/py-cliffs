@@ -143,7 +143,7 @@ class SyntaxParser:
 
                     # Closing tail parameter delimiter
                     elif state == 'AFTER_TAIL':
-                        pass
+                        state = 'NORMAL'
 
                     else:
                         raise SyntaxError("Unexpected parameter closing delimiter '>'")
