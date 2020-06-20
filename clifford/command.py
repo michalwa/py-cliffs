@@ -79,8 +79,11 @@ class Command:
         max_width = kwargs.get('max_width', 70)
         indent_width = kwargs.get('indent_width', 4)
 
-        for line in textwrap.wrap(str(self.syntax), width=max_width):
-            yield line
+        if max_width != 0:
+            for line in textwrap.wrap(str(self.syntax), width=max_width):
+                yield line
+        else:
+            yield str(self.syntax)
 
         if self.description is not None:
             wrap_options = {
@@ -89,5 +92,8 @@ class Command:
                 'subsequent_indent': ' ' * indent_width
             }
 
-            for line in textwrap.wrap(self.description, **wrap_options):
-                yield line
+            if max_width != 0:
+                for line in textwrap.wrap(self.description, **wrap_options):
+                    yield line
+            else:
+                yield str(self.description)
