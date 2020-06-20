@@ -1,9 +1,9 @@
 from typing import Optional, List, Iterable
 from datetime import datetime
 from time import struct_time, strptime, strftime
-from clifford import *
+from cliffs import *
 
-clifford = CommandDispatcher()
+cli = CommandDispatcher()
 
 # You can use custom call matchers to define custom parameter types.
 custom_matcher = CallMatcher()
@@ -11,7 +11,7 @@ custom_matcher.register_type(lambda s: strptime(s, '%I:%M'), '12h_time')
 
 
 # The decorator registers the function as the callback for the specified command
-@clifford.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message>]', matcher=custom_matcher)
+@cli.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message>]', matcher=custom_matcher)
 def command_set_alarm(match: CallMatch):
 
     # The callback recieves a `match` object describing the configuration
@@ -42,7 +42,7 @@ def command_set_alarm(match: CallMatch):
 # Nothing can follow such parameters, anything after it will cause a `SyntaxError`.
 #
 # You can pass parameters directly as arguments to a callback.
-@clifford.command('eval <expr...>', description='Evaluates a given expression.')
+@cli.command('eval <expr...>', description='Evaluates a given expression.')
 def command_eval(expr: List[str]):
 
     # Command callbacks can return values which will be passed to the caller of `dispatch()`
@@ -54,7 +54,7 @@ def command_eval(expr: List[str]):
 # Note that if you assign an identifier to a group, its state won't be present in the
 # index-based array (`opts` or `vars`).
 # These identifiers will not be displayed in the usage help.
-@clifford.command("i [don't]:negation like (bread|cheese):food")
+@cli.command("i [don't]:negation like (bread|cheese):food")
 def command_like_bread(negation: bool, food: int):
     food_name = ['bread', 'cheese'][food]
     if not negation:
@@ -64,7 +64,7 @@ def command_like_bread(negation: bool, food: int):
 
 
 # Command callbacks can also recieve additional arguments from the caller of `dispatch()`
-@clifford.command('tell time', description='Tells the date and time')
+@cli.command('tell time', description='Tells the date and time')
 def command_tell_time(now: datetime):
     print(f"The time is {now}")
 
@@ -85,27 +85,27 @@ class HiddenCommand(Command):
 #
 # For example, when calling: `6 alarm at`, even though more tokens match the
 # "set alarm at ..." command, the command below will be reported as missing arguments.
-@clifford.command('<n:int> times say <what>', command_class=HiddenCommand)
+@cli.command('<n:int> times say <what>', command_class=HiddenCommand)
 def command_repeat(n: int, what: str):
     for _ in range(n):
         print(what)
 
 
-@clifford.command('exit')
+@cli.command('exit')
 def command_exit():
     print("Bye!")
     exit(0)
 
 
 # All callback parameters are optional and indicate what the callback needs to recieve
-@clifford.command('help', matcher=CallMatcher(case_sensitive=False), description='Displays this help message')
+@cli.command('help', matcher=CallMatcher(case_sensitive=False), description='Displays this help message')
 def command_show_help():
     print('Known commands')
     print('--------------')
 
     # Use `get_usage_lines()` to automatically build a usage help message
     # `Command` objects can override their help messages
-    print('\n'.join(clifford.get_usage_lines(separator='')))
+    print('\n'.join(cli.get_usage_lines(separator='')))
 
 
 if __name__ == '__main__':
@@ -116,7 +116,7 @@ if __name__ == '__main__':
                 # Callback args will be passed to command callbacks for successful command matches
                 args = {'now': datetime.now()}
 
-                result = clifford.dispatch(input('> '), **args)
+                result = cli.dispatch(input('> '), **args)
                 if result is not None:
                     print(f'= {result}')
 

@@ -1,4 +1,4 @@
-# py-clifford
+# cliffs
 This is an implementation of [Clifford](https://github.com/michalwa/Clifford)
 (originally written in Java) for Python 3 (tested in 3.7.4).
 Although this implementation has much more functionality,
