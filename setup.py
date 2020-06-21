@@ -11,6 +11,6 @@ setup(
     long_description=long_description,
     author='michalwa',
     author_email='michalwa2003@gmail.com',
-    url='https://github.com/michalwa/py-cliffy',
-    packages=['cliffy']
+    url='https://github.com/michalwa/py-cliffs',
+    packages=['cliffs']
 )
