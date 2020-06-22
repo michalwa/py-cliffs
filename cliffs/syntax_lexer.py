@@ -1,11 +1,12 @@
-from typing import Iterable, Tuple
+from typing import Iterable
 from .utils import StrBuffer
+from .token import Token
 
 
 class SyntaxLexer:
     """Splits syntax specification strings into tokens."""
 
-    def tokenize(self, spec: str) -> Iterable[Tuple[str, str]]:
+    def tokenize(self, spec: str) -> Iterable[Token]:
         """Splits the specified syntax specification into tokens.
 
         Parameters
@@ -14,33 +15,41 @@ class SyntaxLexer:
 
         Returns
         -------
-          * `Iterable[(str, str)]`: The resulting tokens. Each token is a pair of
-            two strings: the type of the token (`symbol`, `delim` or `ellipsis`)
-            and the value of the token (varies depending on the type).
+          * `Iterable[Token]`: The resulting tokens.
         """
 
+        current_start = 0
         current = StrBuffer()
 
-        for c in spec + ' ':
+        for i, c in enumerate(spec + ' '):
 
             # Treat spaces as delimiters but exclude from tokens
             if c.isspace():
                 if current != '':
-                    yield 'symbol', current.flush()
+                    yield Token('symbol', current.flush(), current_start, i)
 
             # Delimiters
             elif c in '<:>[](|)':
                 if current != '':
-                    yield 'symbol', current.flush()
-                yield 'delim', c
+                    yield Token('symbol', current.flush(), current_start, i)
+                yield Token('delimeter', c, i, i + 1)
+
+            # Asterisk
+            elif c == '*':
+                if current != '':
+                    yield Token('symbol', current.flush(), current_start, i)
+                yield Token('asterisk', c, i, i + 1)
 
             # Accumulate symbols
             else:
+                if current == '':
+                    current_start = i
+
                 current += c
 
                 # Yield off ellipses
                 if str(current).endswith('...'):
                     current.trim(end=-3)
                     if current != '':
-                        yield 'symbol', current.flush()
-                    yield 'ellipsis', '...'
+                        yield Token('symbol', current.flush(), current_start, i - 2)
+                    yield Token('ellipsis', '...', i - 2, i + 1)

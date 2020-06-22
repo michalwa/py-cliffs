@@ -11,7 +11,7 @@ custom_matcher.register_type(lambda s: strptime(s, '%I:%M'), '12h_time')
 
 
 # The decorator registers the function as the callback for the specified command
-@cli.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message>]', matcher=custom_matcher)
+@cli.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message...*>]', matcher=custom_matcher)
 def command_set_alarm(match: CallMatch):
 
     # The callback recieves a `match` object describing the configuration

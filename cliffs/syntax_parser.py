@@ -1,4 +1,5 @@
-from typing import cast, Type, Iterable, Tuple
+from typing import Type, Iterable
+from .token import Token
 from .syntax_tree import StNode, StSequence, StLiteral, StParam, StOptSequence, StVarGroup, StIdentifiable, StTail
 
 
@@ -46,12 +47,12 @@ class SyntaxParser:
 
         self.symbol_list_class = kwargs.get('symbol_list_class', SymbolList)  # type: Type[SymbolList]
 
-    def parse(self, tokens: Iterable[Tuple[str, str]]) -> StNode:
+    def parse(self, tokens: Iterable[Token]) -> StNode:
         """Parses the given sequence of tokens into a syntax tree.
 
         Parameters
         ----------
-          * tokens: `Iterable[Tuple[str, str]]` - The tokens to parse.
+          * tokens: `Iterable[Token]` - The tokens to parse.
 
         Returns
         -------
@@ -71,52 +72,55 @@ class SyntaxParser:
         param_name = None
         param_type = None
 
-        for token_type, token_value in tokens:
+        for token in tokens:
 
             # Symbols
-            if token_type == 'symbol':
+            if token.typ == 'symbol':
 
                 # Parameter names
                 if state == 'BEFORE_PARAM_NAME':
-                    if param_name is not None:
-                        raise SyntaxError(f"Unexpected literal '{token_value}'")
-                    param_name = token_value
+                    param_name = token.value
                     state = 'AFTER_PARAM_NAME'
 
                 # Parameter types
                 elif state == 'BEFORE_PARAM_TYPE':
-                    if param_type is not None:
-                        raise SyntaxError(f"Unexpected literal '{token_value}'")
-                    param_type = token_value
+                    param_type = token.value
                     state = 'AFTER_PARAM_TYPE'
 
                 # Group identifiers
                 elif state == 'BEFORE_IDENTIFIER':
-                    group = cast(StIdentifiable, current.last_child)
-                    group.identifier = symbols.register(token_value)
+                    group = current.last_child
+                    group.identifier = symbols.register(token.value)
                     state = 'NORMAL'
 
                 # Literals
                 else:
-                    current.append_child(StLiteral(token_value))
+                    current.append_child(StLiteral(token.value))
 
             # Tail ellipsis
-            elif token_type == 'ellipsis':
+            elif token.typ == 'ellipsis':
                 if state != 'AFTER_PARAM_NAME' or param_name is None:
-                    raise SyntaxError("Unexpected ellipsis '...'")
+                    raise SyntaxError(f"Unexpected {token}")
 
                 current.append_child(StTail(param_name))
                 state = 'AFTER_TAIL'
 
-            elif token_type == 'delim':
+            elif token.typ == 'asterisk':
+                if state != 'AFTER_TAIL':
+                    raise SyntaxError(f"Unexpected {token}")
+
+                current.last_child.raw = True
+                state = 'AFTER_TAIL_RAW'
+
+            elif token.typ == 'delimeter':
 
                 # Opening parameter delimiter
-                if token_value == '<':
+                if token.value == '<':
                     if state != 'NORMAL':
-                        raise SyntaxError("Unexpected parameter opening delimiter '<'")
+                        raise SyntaxError(f"Unexpected {token}")
                     state = 'BEFORE_PARAM_NAME'
 
-                elif token_value == ':':
+                elif token.value == ':':
 
                     # Parameter type specifier separator,
                     if state == 'AFTER_PARAM_NAME':
@@ -127,9 +131,9 @@ class SyntaxParser:
                         state = 'BEFORE_IDENTIFIER'
 
                     else:
-                        raise SyntaxError("Unexpected separator ':'")
+                        raise SyntaxError(f"Unexpected {token}")
 
-                elif token_value == '>':
+                elif token.value == '>':
 
                     # Closing parameter delimiter
                     if state in ['AFTER_PARAM_NAME', 'AFTER_PARAM_TYPE']:
@@ -142,25 +146,25 @@ class SyntaxParser:
                         state = 'NORMAL'
 
                     # Closing tail parameter delimiter
-                    elif state == 'AFTER_TAIL':
+                    elif state in ['AFTER_TAIL', 'AFTER_TAIL_RAW']:
                         state = 'NORMAL'
 
                     else:
-                        raise SyntaxError("Unexpected parameter closing delimiter '>'")
+                        raise SyntaxError(f"Unexpected {token}")
 
                 # Opening optional sequence delimiter
-                elif token_value == '[':
+                elif token.value == '[':
                     if state != 'NORMAL':
-                        raise SyntaxError("Unexpected optional sequence opening delimiter '['")
+                        raise SyntaxError(f"Unexpected {token}")
 
                     child = StOptSequence()  # type: StNode
                     current.append_child(child)
                     current = child
 
                 # Closing optional sequence delimiter
-                elif token_value == ']':
+                elif token.value == ']':
                     if state != 'NORMAL' or not isinstance(current, StOptSequence):
-                        raise SyntaxError("Unexpected optional sequence closing delimiter ']'")
+                        raise SyntaxError(f"Unexpected {token}")
                     if current.num_children() == 0:
                         raise SyntaxError('Empty optional sequence')
 
@@ -168,9 +172,9 @@ class SyntaxParser:
                         current = current.parent
 
                 # Opening variant group delimiter
-                elif token_value == '(':
+                elif token.value == '(':
                     if state != 'NORMAL':
-                        raise SyntaxError("Unexpected variant group opening delimiter '('")
+                        raise SyntaxError(f"Unexpected {token}")
 
                     child = StVarGroup()
                     grandchild = StSequence()
@@ -179,13 +183,13 @@ class SyntaxParser:
                     current = grandchild
 
                 # Variant group sequence separator
-                elif token_value == '|':
+                elif token.value == '|':
                     if any([
                         state != 'NORMAL',
                         not isinstance(current, StSequence),
                         not isinstance(current.parent, StVarGroup)
                     ]):
-                        raise SyntaxError("Unexpected variant separator '|'")
+                        raise SyntaxError(f"Unexpected {token}")
                     if current.num_children() == 0:
                         raise SyntaxError('Empty variant')
 
@@ -195,13 +199,13 @@ class SyntaxParser:
                     current = child
 
                 # Closing variant group delimiter
-                elif token_value == ')':
+                elif token.value == ')':
                     if any([
                         state != 'NORMAL',
                         not isinstance(current, StSequence),
                         not isinstance(current.parent, StVarGroup)
                     ]):
-                        raise SyntaxError("Unexpected variant group closing delimiter ')'")
+                        raise SyntaxError(f"Unexpected {token}")
                     if current.num_children() == 0:
                         raise SyntaxError('Empty variant')
 

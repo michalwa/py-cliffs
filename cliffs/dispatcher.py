@@ -101,7 +101,7 @@ class CommandDispatcher:
 
         # Match all commands and look for the one with the highest score
         for command in self._commands:
-            match = CallMatch()
+            match = CallMatch(call)
 
             try:
                 command.match(call, match)

@@ -1,5 +1,6 @@
 from typing import Iterable, Optional
 from .utils import StrBuffer
+from .token import Token
 
 
 class CallLexer:
@@ -21,8 +22,8 @@ class CallLexer:
 
         self.delims = delims
 
-    def tokenize(self, cmd: str) -> Iterable[str]:
-        """Splits the given command call string into string tokens.
+    def tokenize(self, cmd: str) -> Iterable[Token]:
+        """Splits the given command call string into tokens.
 
         Parameters
         ----------
@@ -30,20 +31,21 @@ class CallLexer:
 
         Returns
         -------
-          * `Iterable[str]`: The resulting tokens.
+          * `Iterable[Token]`: The resulting tokens.
         """
 
         current = StrBuffer()
+        current_start = 0
         escape = False
         delim = None  # type: Optional[str]
 
-        for c in cmd + ' ':
+        for i, c in enumerate(cmd):
             if c.isspace():
                 if current != '':
                     if delim:
                         current += c
                     else:
-                        yield current.flush()
+                        yield Token('plain', current.flush(), current_start, i)
 
             elif c == '\\':
                 if escape:
@@ -57,8 +59,9 @@ class CallLexer:
 
                 elif delim is None:
                     delim = c
+                    current_start = i
                 elif c == delim:
-                    yield current.flush()
+                    yield Token('quoted', current.flush(), current_start, i + 1)
                     delim = None
                 else:
                     current += c
@@ -67,4 +70,21 @@ class CallLexer:
                 if escape:
                     current += '\\'
                     escape = False
+
+                if current == '':
+                    if delim is not None:
+                        current_start = i - 1
+                    else:
+                        current_start = i
+
                 current += c
+
+        if current != '':
+
+            # Unterminated quoted argument
+            if delim is not None:
+                yield Token('plain', delim + current.flush(), current_start, i + 1)
+
+            # Unterminated plain argument
+            else:
+                yield Token('plain', current.flush(), current_start, i + 1)

@@ -89,7 +89,17 @@ class CallMatcher:
 class CallMatch:
     """Stores the result of a command call matched against a command syntax."""
 
-    def __init__(self):
+    def __init__(self, raw: str):
+        """Constructs a call match to be populated by the syntax tree recursive
+        parsers.
+
+        Parameters
+        ----------
+          * raw: `str` - The original call string passed to the lexer for tokenization.
+        """
+
+        self.raw = raw
+
         self.terminated = False
 
         self.tokens = None  # type: Optional[List[str]]
@@ -112,6 +122,17 @@ class CallMatch:
         self.params.update(other.params)
         self.opts += other.opts
         self.vars += other.vars
+
+    def branch(self) -> 'CallMatch':
+        """Creates a copy of this call match for recursive matching.
+
+        Returns
+        -------
+          * `CallMatch`: The copied call match.
+        """
+
+        match = CallMatch(self.raw)
+        return match
 
     def __str__(self) -> str:
         return f'params: {self.params}, optionals: {self.opts}, variants: {self.vars}'

@@ -1,5 +1,6 @@
 from typing import Any, List, Iterable, Callable, Optional
 from .call_match import CallMatcher, CallMatch, CallMatchFail
+from .token import Token
 
 
 class StNode:
@@ -56,25 +57,25 @@ class StNode:
             for leaf in child.iter_traverse():
                 yield leaf
 
-    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
         """This method is proxied by `match_call` which does additional checks
         before passing to this method. Refer to the documentation of `match_call`
         for more information.
         """
         return tokens
 
-    def match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
         """Tries to parse the given call tokens into the given match instance.
 
         Parameters
         ----------
-          * tokens: `List[str]` - The tokens to parse.
+          * tokens: `List[Token]` - The tokens to parse.
           * matcher: `CallMatcher` - The matcher to use.
           * match: `CallMatch` - The match to populate.
 
         Returns
         -------
-          * `List[str]`: The tokens left for further matching by other nodes.
+          * `List[Token]`: The tokens left for further matching by other nodes.
         """
 
         if match.terminated:
@@ -122,9 +123,11 @@ class StLiteral(StLeaf):
     def debug(self) -> str:
         return f'literal("{self.value}")'
 
-    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
-        if len(tokens) < 1 or not matcher.match_literal(self.value, tokens[0]):
-            raise CallMatchFail(f'Literal "{self.value}" not present')
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
+        if len(tokens) < 1:
+            raise CallMatchFail(f"Expected literal '{self.value}'")
+        if not matcher.match_literal(self.value, tokens[0].value):
+            raise CallMatchFail(f"Expected literal '{self.value}', got {tokens[0]}")
 
         match.score += 1
         return tokens[1:]
@@ -163,21 +166,22 @@ class StParam(StLeaf):
     def debug(self) -> str:
         return f'param("{self.name}")'
 
-    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
         if len(tokens) < 1:
-            raise CallMatchFail(f'Parameter <{self.name}> not present')
+            raise CallMatchFail(f'Expected argument for parameter <{self.name}>')
 
+        # Type construction
         if self.typename is not None:
-            constr = matcher.get_type(self.typename)
+            typ = matcher.get_type(self.typename)
             try:
-                value = constr(tokens[0])
+                value = typ(tokens[0].value)
             except ValueError:
-                raise CallMatchFail(f"Argument '{tokens[0]}' for parameter '{self.name}' \
-does not match type '{self.typename}'")
+                raise CallMatchFail(f"Argument {tokens[0]} for parameter <{self.name}> \
+does not match type {self.typename}")
 
         # Type defaults to string
         else:
-            value = tokens[0]
+            value = tokens[0].value
 
         match.score += 1
         match.params[self.name] = value
@@ -195,7 +199,7 @@ class StSequence(StNode):
     def __str__(self) -> str:
         return ' '.join(str(child) for child in self.children)
 
-    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
         for child in self.children:
             tokens = child.match_call(tokens, matcher, match)
         return tokens
@@ -217,9 +221,9 @@ class StOptSequence(StIdentifiable, StNode):
         children = ' '.join(str(child) for child in self.children)
         return f"[{children}]"
 
-    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
         tokens_temp = tokens
-        match_temp = CallMatch()
+        match_temp = match.branch()
         for child in self.children:
             try:
                 tokens_temp = child.match_call(tokens_temp, matcher, match_temp)
@@ -261,9 +265,9 @@ class StVarGroup(StIdentifiable, StNode):
         children = '|'.join(str(child) for child in self.children)
         return f"({children})"
 
-    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
         for index, variant in enumerate(self.children):
-            match_temp = CallMatch()
+            match_temp = match.branch()
             try:
                 tokens_temp = variant.match_call(tokens, matcher, match_temp)
 
@@ -293,10 +297,18 @@ class StTail(StLeaf):
         super().__init__()
         self.name = name
 
+        # Whether to capture untokenized plaintext under the tail parameter
+        self.raw = False
+
     def __str__(self) -> str:
         return f"<{self.name}...>"
 
-    def _match_call(self, tokens: List[str], matcher: CallMatcher, match: CallMatch) -> List[str]:
-        match.params[self.name] = tokens
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
+
+        if self.raw:
+            match.params[self.name] = match.raw[tokens[0].start:tokens[-1].end]
+        else:
+            match.params[self.name] = [token.value for token in tokens]
+
         match.terminated = True  # Disallow further elements to be matched
         return []
