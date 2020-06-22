@@ -17,7 +17,8 @@ This way usage specification can be directly used to generate command parsers.
   for processing by the command handler; parameters can also specify types
   (`<param: type>`) which their values will be validated for and parsed into
 - `<tails...>` will collect any remaining tokens after all previous elements
-  have been matched
+  have been matched; tails can also collect raw text if you suffix them with an asterisk
+  (`<tail...*>`)
 - `(variant|groups)` encapsulate sequences of elements and accept only one of
   those sequences (index of the present sequence is stored for processing by the handler)
 - `[optional sequences]` may or may not be present in the command call

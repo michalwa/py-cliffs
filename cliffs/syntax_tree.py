@@ -306,7 +306,10 @@ class StTail(StLeaf):
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
 
         if self.raw:
-            match.params[self.name] = match.raw[tokens[0].start:tokens[-1].end]
+            if len(tokens) == 0:
+                match.params[self.name] = ''
+            else:
+                match.params[self.name] = match.raw[tokens[0].start:tokens[-1].end]
         else:
             match.params[self.name] = [token.value for token in tokens]
 
