@@ -206,16 +206,11 @@ class SyntaxParser:
                         not isinstance(current.parent, StVarGroup)
                     ]):
                         raise SyntaxError(f"Unexpected {token}")
+
                     if current.num_children == 0:
                         raise SyntaxError('Empty variant')
 
-                    vargroup = current.parent
-                    current = vargroup.parent
-
-                    # Flatten group into a sequence, if it has just one variant
-                    if vargroup.num_children == 1:
-                        current.remove_child(vargroup)
-                        current.append_child(vargroup.last_child)
+                    current = current.parent.parent
 
                 # Unordered group delimiter
                 elif token.value == '{':
@@ -231,6 +226,9 @@ class SyntaxParser:
                     if state != 'NORMAL' or not isinstance(current, StUnordered):
                         raise SyntaxError(f"Unexpected {token}")
 
+                    if current.num_children == 0:
+                        raise SyntaxError('Empty unordered group')
+
                     current = current.parent
 
                 else:
@@ -244,8 +242,4 @@ class SyntaxParser:
                 path = f'{current.node_name} > {path}'
             raise SyntaxError(f'Unterminated expression: {path}')
 
-        # Flatten if there is only one element in the root sequence
-        if root.num_children == 1:
-            return root.last_child
-        else:
-            return root
+        return root.flattened()

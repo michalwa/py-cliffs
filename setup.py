@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name='cliffs',
-    version='1.6',
+    version='1.6.1',
     license='MIT',
     description='Command Line Interface For Fucks Sake',
     long_description=long_description,

@@ -63,6 +63,16 @@ class StNode:
             for leaf in child.iter_traverse():
                 yield leaf
 
+    def flattened(self) -> 'StNode':
+        """Creates a flattened version (not necessarily copy) of this node with
+        minimized number of generations of descendants.
+        """
+
+        copy = self.__class__()
+        for child in self.children:
+            copy.append_child(child.flattened())
+        return copy
+
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         """This method is proxied by `match_call` which does additional checks
         before passing to this method. Refer to the documentation of `match_call`
@@ -92,8 +102,11 @@ class StNode:
 class StLeaf(StNode):
     """A node that cannot have children"""
 
-    def append_child(self, child: 'StNode') -> 'StNode':
+    def append_child(self, child: StNode) -> StNode:
         raise ValueError(f"Node of type {self.node_name} cannot have children")
+
+    def flattened(self) -> StNode:
+        return self
 
 
 class StIdentifiable:
@@ -205,6 +218,20 @@ class StSequence(StNode):
     def __str__(self) -> str:
         return ' '.join(str(child) for child in self.children)
 
+    def flattened(self) -> str:
+        if self.num_children == 1:
+            return self.last_child.flattened()
+        else:
+            # Unpack nested sequences
+            flat = super().flattened()
+            new = StSequence()
+            for child in flat.children:
+                if isinstance(child, StSequence):
+                    new.children += child.children
+                else:
+                    new.children.append(child)
+            return new
+
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         for child in self.children:
             tokens = child.match_call(tokens, matcher, match)
@@ -270,6 +297,15 @@ class StVarGroup(StIdentifiable, StNode):
     def __str__(self) -> str:
         children = '|'.join(str(child) for child in self.children)
         return f"({children})"
+
+    def flattened(self) -> StNode:
+        if self.num_children == 1:
+            return self.last_child.flattened()
+        else:
+            # Only flatten variants
+            new = StVarGroup()
+            new.children = [child.flattened() for child in self.children]
+            return new
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         first_fail = None
@@ -342,6 +378,12 @@ class StUnordered(StNode):
 
     def __str__(self) -> str:
         return f"{{{' '.join(str(child) for child in self.children)}}}"
+
+    def flattened(self) -> StNode:
+        if self.num_children == 1:
+            return self.last_child.flattened()
+        else:
+            return super().flattened()
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
 
