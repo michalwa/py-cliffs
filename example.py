@@ -1,8 +1,9 @@
 import sys
 import logging
-from typing import Optional, List, Iterable
+from typing import Optional, Iterable
 from datetime import datetime
 from time import struct_time, strptime, strftime
+
 from cliffs import *
 
 
