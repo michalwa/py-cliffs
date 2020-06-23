@@ -1,7 +1,20 @@
+import sys
+import logging
 from typing import Optional, List, Iterable
 from datetime import datetime
 from time import struct_time, strptime, strftime
 from cliffs import *
+
+
+# Set up logging
+logger = logging.getLogger('cliffs.syntax_parser')
+logger.setLevel(logging.DEBUG)
+
+sh = logging.StreamHandler(sys.stdout)
+sh.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+
+logger.addHandler(sh)
+
 
 cli = CommandDispatcher()
 
@@ -91,7 +104,8 @@ def command_repeat(n: int, what: str):
         print(what)
 
 
-@cli.command('exit')
+# There will be an info message logged that this command can be simplified
+@cli.command('({(({exit}))})')
 def command_exit():
     print("Bye!")
     exit(0)

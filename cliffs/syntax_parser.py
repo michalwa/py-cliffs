@@ -1,3 +1,4 @@
+import logging
 from typing import Type, Iterable
 from .token import Token
 from .syntax_tree import *
@@ -210,7 +211,12 @@ class SyntaxParser:
                     if current.num_children == 0:
                         raise SyntaxError('Empty variant')
 
-                    current = current.parent.parent
+                    vargroup = current.parent
+                    current = vargroup.parent
+
+                    # Manually flatten single-variant variant groups into plain sequences
+                    if vargroup.num_children == 1:
+                        current.remove_child(vargroup).append_child(vargroup.last_child)
 
                 # Unordered group delimiter
                 elif token.value == '{':
@@ -242,4 +248,13 @@ class SyntaxParser:
                 path = f'{current.node_name} > {path}'
             raise SyntaxError(f'Unterminated expression: {path}')
 
-        return root.flattened()
+        # Flatten
+        flat_root = root.flattened()
+
+        if root != flat_root:
+            logging.getLogger('cliffs.syntax_parser').info(
+                'Syntax "%s" can be simplified to "%s"',
+                root.top_level_str(),
+                flat_root.top_level_str())
+
+        return flat_root

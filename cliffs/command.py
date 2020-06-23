@@ -71,6 +71,11 @@ class Command:
     def get_usage_lines(self, **kwargs) -> Iterable[str]:
         """Returns the auto-generated usage help message for this command.
 
+        Keyword arguments
+        -----------------
+          * max_width: `int` - The width to wrap the usage help message to (0 for no wrapping).
+          * indent_width: `int` - The width of the indent for the command description.
+
         Returns
         -------
           * `Iterable[str]`: The lines of the usage help message.
@@ -80,10 +85,10 @@ class Command:
         indent_width = kwargs.get('indent_width', 4)
 
         if max_width != 0:
-            for line in textwrap.wrap(str(self.syntax), width=max_width):
+            for line in textwrap.wrap(self.syntax.top_level_str(), width=max_width):
                 yield line
         else:
-            yield str(self.syntax)
+            yield self.syntax.top_level_str()
 
         if self.description is not None:
             wrap_options = {

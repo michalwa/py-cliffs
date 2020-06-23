@@ -19,6 +19,23 @@ class StNode:
             r += '[' + ', '.join(repr(child) for child in self.children) + ']'
         return r
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+
+        self_items = self.__dict__
+        self_items.pop('parent', 0)
+        other_items = other.__dict__
+        other_items.pop('parent', 0)
+
+        return self_items == other_items and self.children == other.children
+
+    def __neq__(self, other) -> bool:
+        return not self == other
+
+    def top_level_str(self) -> str:
+        return str(self)
+
     @property
     def last_child(self) -> Optional['StNode']:
         return self.children[-1] if len(self.children) > 0 else None
@@ -68,10 +85,14 @@ class StNode:
         minimized number of generations of descendants.
         """
 
-        copy = self.__class__()
+        new = self.__class__()
+        for k, v in self.__dict__.items():
+            if k != 'children':
+                new.__setattr__(k, v)
+
         for child in self.children:
-            copy.append_child(child.flattened())
-        return copy
+            new.append_child(child.flattened())
+        return new
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         """This method is proxied by `match_call` which does additional checks
@@ -215,8 +236,17 @@ class StSequence(StNode):
 
     node_name = 'sequence'
 
-    def __str__(self) -> str:
+    def top_level_str(self) -> str:
         return ' '.join(str(child) for child in self.children)
+
+    def __str__(self) -> str:
+        return '(' + self.top_level_str() + ')'
+
+    def __eq__(self, other) -> bool:
+        if self.num_children == 1 and other == self.last_child:
+            return True
+        else:
+            return super().__eq__(other)
 
     def flattened(self) -> str:
         if self.num_children == 1:
@@ -304,6 +334,7 @@ class StVarGroup(StIdentifiable, StNode):
         else:
             # Only flatten variants
             new = StVarGroup()
+            new.identifier = self.identifier
             new.children = [child.flattened() for child in self.children]
             return new
 
