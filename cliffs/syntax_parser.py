@@ -253,8 +253,6 @@ class SyntaxParser:
 
         if root != flat_root:
             logging.getLogger('cliffs.syntax_parser').info(
-                'Syntax "%s" can be simplified to "%s"',
-                root.top_level_str(),
-                flat_root.top_level_str())
+                'Syntax "%s" can be simplified to "%s"', root, flat_root)
 
         return flat_root

@@ -23,18 +23,15 @@ class StNode:
         if not isinstance(other, self.__class__):
             return False
 
-        self_items = self.__dict__
+        self_items = dict(self.__dict__)
         self_items.pop('parent', 0)
-        other_items = other.__dict__
+        other_items = dict(other.__dict__)
         other_items.pop('parent', 0)
 
         return self_items == other_items and self.children == other.children
 
     def __neq__(self, other) -> bool:
         return not self == other
-
-    def top_level_str(self) -> str:
-        return str(self)
 
     @property
     def last_child(self) -> Optional['StNode']:
@@ -51,6 +48,7 @@ class StNode:
 
     def remove_child(self, child: 'StNode') -> 'StNode':
         self.children.remove(child)
+        child.parent = None
         return self
 
     def traverse(self, callback: Callable[['StNode'], Any]) -> None:
@@ -236,11 +234,9 @@ class StSequence(StNode):
 
     node_name = 'sequence'
 
-    def top_level_str(self) -> str:
-        return ' '.join(str(child) for child in self.children)
-
     def __str__(self) -> str:
-        return '(' + self.top_level_str() + ')'
+        s = ' '.join(str(child) for child in self.children)
+        return f'({s})' if self.parent is not None and not isinstance(self.parent, StVarGroup) else s
 
     def __eq__(self, other) -> bool:
         if self.num_children == 1 and other == self.last_child:
@@ -277,9 +273,6 @@ class StOptSequence(StIdentifiable, StNode):
 
     node_name = 'opt_sequence'
 
-    def __init__(self):
-        super().__init__()
-
     def __str__(self) -> str:
         children = ' '.join(str(child) for child in self.children)
         return f"[{children}]"
@@ -315,9 +308,6 @@ class StVarGroup(StIdentifiable, StNode):
     """
 
     node_name = 'var_group'
-
-    def __init__(self):
-        super().__init__()
 
     def append_child(self, child):
         if not isinstance(child, StSequence):
@@ -403,9 +393,6 @@ class StUnordered(StNode):
     """
 
     node_name = 'unordered'
-
-    def __init__(self):
-        super().__init__()
 
     def __str__(self) -> str:
         return f"{{{' '.join(str(child) for child in self.children)}}}"
