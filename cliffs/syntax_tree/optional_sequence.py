@@ -1,11 +1,11 @@
 from typing import List
-from .node import StNode
-from .identifiable import StIdentifiable
+from .node import Node
+from .identifiable import Identifiable
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher, CallMatchFail
 
 
-class StOptSequence(StIdentifiable, StNode):
+class OptionalSequence(Identifiable, Node):
     """An optional sequence.
 
     An optional sequence will attempt to match its child nodes against the call,

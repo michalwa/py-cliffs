@@ -1,12 +1,9 @@
-from typing import Any, Callable, Iterable, List, Optional, Type, TypeVar
+from typing import Any, Callable, Iterable, List, Optional, Type
 
 from .call_match import CallMatch, CallMatchFail
 from .command import Command
 from .syntax_lexer import SyntaxLexer
 from .syntax_parser import SyntaxParser
-
-# typedefs
-_T = TypeVar('_T')
 
 
 class CommandDispatchError(Exception):

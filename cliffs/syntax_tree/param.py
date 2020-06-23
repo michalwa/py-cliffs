@@ -1,10 +1,10 @@
 from typing import List, Optional
-from .node import StLeaf
+from .node import Leaf
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher, CallMatchFail
 
 
-class StParam(StLeaf):
+class Param(Leaf):
     """A command parameter.
 
     Any token present in place of the parameter will be stored as the value

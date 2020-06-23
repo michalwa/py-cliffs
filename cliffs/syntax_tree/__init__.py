@@ -1,13 +1,13 @@
-from .node import StNode, StLeaf
-from .identifiable import StIdentifiable
-from .literal import StLiteral
-from .param import StParam
-from .tail import StTail
-from .sequence import StSequence
-from .opt_sequence import StOptSequence
-from .unordered import StUnordered
-from .var_group import StVarGroup
+from .node import Node, Leaf
+from .identifiable import Identifiable
+from .literal import Literal
+from .param import Param
+from .tail import Tail
+from .sequence import Sequence
+from .optional_sequence import OptionalSequence
+from .unordered_group import UnorderedGroup
+from .variant_group import VariantGroup
 
 __all__ = [
-    'StNode', 'StLeaf', 'StIdentifiable', 'StLiteral', 'StParam', 'StTail',
-    'StSequence', 'StOptSequence', 'StUnordered', 'StVarGroup']
+    'Node', 'Leaf', 'Identifiable', 'Literal', 'Param', 'Tail', 'Sequence',
+    'OptionalSequence', 'UnorderedGroup', 'VariantGroup']

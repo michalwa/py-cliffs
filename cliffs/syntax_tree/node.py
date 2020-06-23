@@ -3,14 +3,14 @@ from ..token import Token
 from ..call_match import CallMatch, CallMatcher
 
 
-class StNode:
+class Node:
     """A node in a syntax tree"""
 
     node_name = 'node'
 
     def __init__(self):
-        self.parent = None  # type: Optional[StNode]
-        self.children = []  # type: List[StNode]
+        self.parent = None  # type: Optional[Node]
+        self.children = []  # type: List[Node]
 
     def __repr__(self) -> str:
         r = f'{self.node_name}'
@@ -33,43 +33,43 @@ class StNode:
         return not self == other
 
     @property
-    def last_child(self) -> Optional['StNode']:
+    def last_child(self) -> Optional['Node']:
         return self.children[-1] if len(self.children) > 0 else None
 
     @property
     def num_children(self) -> int:
         return len(self.children)
 
-    def append_child(self, child: 'StNode') -> 'StNode':
+    def append_child(self, child: 'Node') -> 'Node':
         self.children.append(child)
         child.parent = self
         return self
 
-    def remove_child(self, child: 'StNode') -> 'StNode':
+    def remove_child(self, child: 'Node') -> 'Node':
         self.children.remove(child)
         child.parent = None
         return self
 
-    def traverse(self, callback: Callable[['StNode'], Any]) -> None:
+    def traverse(self, callback: Callable[['Node'], Any]) -> None:
         """Recursively traverses the descendants of the node calling the callback
         with each individual descendant (including this node itself).
 
         Parameters
         ----------
-          * callback: `(StNode) -> *` - The callback to call with each descendant.
+          * callback: `(Node) -> *` - The callback to call with each descendant.
         """
 
         callback(self)
         for child in self.children:
             child.traverse(callback)
 
-    def iter_traverse(self) -> Iterable['StNode']:
+    def iter_traverse(self) -> Iterable['Node']:
         """Recursively constructs an iterator that will traverse the descendants
         of this node (including this node itself).
 
         Returns
         ------
-          * `Iterable[StNode]`: This node and its descendants.
+          * `Iterable[SyntaxNode]`: This node and its descendants.
         """
 
         yield self
@@ -77,7 +77,7 @@ class StNode:
             for leaf in child.iter_traverse():
                 yield leaf
 
-    def flattened(self) -> 'StNode':
+    def flattened(self) -> 'Node':
         """Creates a flattened version (not necessarily copy) of this node with
         minimized number of generations of descendants.
         """
@@ -117,11 +117,11 @@ class StNode:
         return self._match_call(tokens, matcher, match)
 
 
-class StLeaf(StNode):
+class Leaf(Node):
     """A node that cannot have children"""
 
-    def append_child(self, child: StNode) -> StNode:
+    def append_child(self, child: Node) -> Node:
         raise ValueError(f"Node of type {self.node_name} cannot have children")
 
-    def flattened(self) -> StNode:
+    def flattened(self) -> Node:
         return self

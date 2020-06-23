@@ -1,10 +1,10 @@
 from typing import List
-from .node import StNode
+from .node import Node
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher
 
 
-class StSequence(StNode):
+class Sequence(Node):
     """A simple sequence of syntax nodes.
 
     For a sequence to be matched by tokens, all child nodes must be matched.
@@ -28,9 +28,9 @@ class StSequence(StNode):
         else:
             # Unpack nested sequences
             flat = super().flattened()
-            new = StSequence()
+            new = Sequence()
             for child in flat.children:
-                if isinstance(child, StSequence):
+                if isinstance(child, Sequence):
                     new.children += child.children
                 else:
                     new.children.append(child)

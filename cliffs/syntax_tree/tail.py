@@ -1,10 +1,10 @@
 from typing import List
-from .node import StLeaf
+from .node import Leaf
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher
 
 
-class StTail(StLeaf):
+class Tail(Leaf):
     """A tail parameter.
 
     A tail parameter collects all leftover tokens (thus it must be the last node

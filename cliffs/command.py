@@ -1,6 +1,6 @@
 from typing import Optional, Callable, Iterable
 from inspect import signature
-from .syntax_tree import StNode
+from .syntax_tree import Node as SyntaxNode
 from .call_lexer import CallLexer
 from .call_match import CallMatcher, CallMatch, CallMatchFail
 import textwrap
@@ -9,7 +9,7 @@ import textwrap
 class Command:
     """Matches command calls against its syntax and controls callback dispatch."""
 
-    def __init__(self, syntax: StNode, callback: Callable, **kwargs):
+    def __init__(self, syntax: SyntaxNode, callback: Callable, **kwargs):
         """Initializes a command.
 
         Parameters

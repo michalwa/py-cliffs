@@ -1,11 +1,11 @@
 from typing import List
 from itertools import permutations
-from .node import StNode
+from .node import Node
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher, CallMatchFail
 
 
-class StUnordered(StNode):
+class UnorderedGroup(Node):
     """An unordered group.
 
     Children of this group can be matched in an arbitrary order.
@@ -16,7 +16,7 @@ class StUnordered(StNode):
     def __str__(self) -> str:
         return f"{{{' '.join(str(child) for child in self.children)}}}"
 
-    def flattened(self) -> StNode:
+    def flattened(self) -> Node:
         if self.num_children == 1:
             return self.last_child.flattened()
         else:

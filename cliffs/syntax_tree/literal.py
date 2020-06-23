@@ -1,10 +1,10 @@
 from typing import List
-from .node import StLeaf
+from .node import Leaf
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher, CallMatchFail
 
 
-class StLiteral(StLeaf):
+class Literal(Leaf):
     """A literal command token.
 
     A token **must** be present in the command call to match a literal.
