@@ -23,6 +23,7 @@ This way usage specification can be directly used to generate command parsers.
   those sequences (index of the present sequence is stored for processing by the handler)
 - `[optional sequences]` may or may not be present in the command call
   (boolean indicating presence is stored for processing by the handler)
+- `{unordered groups}` whose elements can be present in an arbitrary order
 
 ## Example
 To demonstrate the concept of how **Clifford** works, consider this simple command syntax

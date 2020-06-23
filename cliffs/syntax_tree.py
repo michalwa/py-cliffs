@@ -1,4 +1,5 @@
 from typing import Any, List, Iterable, Callable, Optional
+from itertools import permutations
 from .call_match import CallMatcher, CallMatch, CallMatchFail
 from .token import Token
 
@@ -62,14 +63,14 @@ class StNode:
             for leaf in child.iter_traverse():
                 yield leaf
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         """This method is proxied by `match_call` which does additional checks
         before passing to this method. Refer to the documentation of `match_call`
         for more information.
         """
         return tokens
 
-    def match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         """Tries to parse the given call tokens into the given match instance.
 
         Parameters
@@ -128,7 +129,7 @@ class StLiteral(StLeaf):
     def debug(self) -> str:
         return f'literal("{self.value}")'
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) < 1:
             raise CallMatchFail(f"Expected literal '{self.value}'")
         if not matcher.match_literal(self.value, tokens[0].value):
@@ -171,7 +172,7 @@ class StParam(StLeaf):
     def debug(self) -> str:
         return f'param("{self.name}")'
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) < 1:
             raise CallMatchFail(f'Expected argument for parameter <{self.name}>')
 
@@ -204,7 +205,7 @@ class StSequence(StNode):
     def __str__(self) -> str:
         return ' '.join(str(child) for child in self.children)
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         for child in self.children:
             tokens = child.match_call(tokens, matcher, match)
         return tokens
@@ -226,7 +227,7 @@ class StOptSequence(StIdentifiable, StNode):
         children = ' '.join(str(child) for child in self.children)
         return f"[{children}]"
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         tokens_temp = tokens
         match_temp = match.branch()
         for child in self.children:
@@ -270,7 +271,9 @@ class StVarGroup(StIdentifiable, StNode):
         children = '|'.join(str(child) for child in self.children)
         return f"({children})"
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+        first_fail = None
+
         for index, variant in enumerate(self.children):
             match_temp = match.branch()
             try:
@@ -283,10 +286,15 @@ class StVarGroup(StIdentifiable, StNode):
 
                 match.update(match_temp)
                 return tokens_temp
-            except CallMatchFail:
-                pass
 
-        raise CallMatchFail('No variant present')
+            except CallMatchFail as fail:
+                if first_fail is None:
+                    first_fail = fail
+
+        if first_fail is not None:
+            raise first_fail
+        else:
+            raise CallMatchFail('No variant present')
 
 
 class StTail(StLeaf):
@@ -308,8 +316,7 @@ class StTail(StLeaf):
     def __str__(self) -> str:
         return f"<{self.name}...>"
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[str]:
-
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if self.raw:
             if len(tokens) == 0:
                 match.params[self.name] = ''
@@ -320,3 +327,50 @@ class StTail(StLeaf):
 
         match.terminated = True  # Disallow further elements to be matched
         return []
+
+
+class StUnordered(StNode):
+    """An unordered group.
+
+    Children of this group can be matched in an arbitrary order.
+    """
+
+    node_name = 'unordered'
+
+    def __init__(self):
+        super().__init__()
+
+    def __str__(self) -> str:
+        return f"{{{' '.join(str(child) for child in self.children)}}}"
+
+    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+
+        first_fail = None
+        matches = []
+
+        for perm in permutations(self.children):
+            match_temp = match.branch()
+            tokens_temp = tokens
+            try:
+                for child in perm:
+                    tokens_temp = child.match_call(tokens_temp, matcher, match_temp)
+
+                # Match found
+                matches.append((match_temp, tokens_temp))
+
+            except CallMatchFail as fail:
+                if first_fail is None:
+                    first_fail = fail
+
+        # Choose best scoring match
+        if matches != []:
+            best_match, tokens = sorted(matches, key=lambda m: m[0].score, reverse=True)[0]
+            match.update(best_match)
+            return tokens
+
+        # If there was no successful permutation found, fail
+        else:
+            if first_fail is not None:
+                raise first_fail
+            else:
+                raise CallMatchFail('Unmatched unordered group')

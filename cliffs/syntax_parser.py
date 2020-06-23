@@ -1,6 +1,6 @@
 from typing import Type, Iterable
 from .token import Token
-from .syntax_tree import StNode, StSequence, StLiteral, StParam, StOptSequence, StVarGroup, StIdentifiable, StTail
+from .syntax_tree import *
 
 
 class SymbolList:
@@ -216,6 +216,25 @@ class SyntaxParser:
                     if vargroup.num_children == 1:
                         current.remove_child(vargroup)
                         current.append_child(vargroup.last_child)
+
+                # Unordered group delimiter
+                elif token.value == '{':
+                    if state != 'NORMAL':
+                        raise SyntaxError(f"Unexpected {token}")
+
+                    child = StUnordered()
+                    current.append_child(child)
+                    current = child
+
+                # Unordered group delimiter
+                elif token.value == '}':
+                    if state != 'NORMAL' or not isinstance(current, StUnordered):
+                        raise SyntaxError(f"Unexpected {token}")
+
+                    current = current.parent
+
+                else:
+                    raise SyntaxError(f"Unknown token: {token}")
 
         # Check for unterminated expressions
         if current is not root:
