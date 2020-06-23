@@ -29,7 +29,7 @@ class SyntaxLexer:
                     yield Token('symbol', current.flush(), current_start, i)
 
             # Delimiters
-            elif c in '<:>[](|){}':
+            elif c in '<:>[](|)':
                 if current != '':
                     yield Token('symbol', current.flush(), current_start, i)
                 yield Token('delimeter', c, i, i + 1)

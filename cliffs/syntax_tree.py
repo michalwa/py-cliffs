@@ -22,13 +22,18 @@ class StNode:
     def last_child(self) -> Optional['StNode']:
         return self.children[-1] if len(self.children) > 0 else None
 
+    @property
+    def num_children(self) -> int:
+        return len(self.children)
+
     def append_child(self, child: 'StNode') -> 'StNode':
         self.children.append(child)
         child.parent = self
         return self
 
-    def num_children(self) -> int:
-        return len(self.children)
+    def remove_child(self, child: 'StNode') -> 'StNode':
+        self.children.remove(child)
+        return self
 
     def traverse(self, callback: Callable[['StNode'], Any]) -> None:
         """Recursively traverses the descendants of the node calling the callback

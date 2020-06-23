@@ -165,7 +165,7 @@ class SyntaxParser:
                 elif token.value == ']':
                     if state != 'NORMAL' or not isinstance(current, StOptSequence):
                         raise SyntaxError(f"Unexpected {token}")
-                    if current.num_children() == 0:
+                    if current.num_children == 0:
                         raise SyntaxError('Empty optional sequence')
 
                     if current.parent is not None:
@@ -190,7 +190,7 @@ class SyntaxParser:
                         not isinstance(current.parent, StVarGroup)
                     ]):
                         raise SyntaxError(f"Unexpected {token}")
-                    if current.num_children() == 0:
+                    if current.num_children == 0:
                         raise SyntaxError('Empty variant')
 
                     current = current.parent
@@ -206,11 +206,16 @@ class SyntaxParser:
                         not isinstance(current.parent, StVarGroup)
                     ]):
                         raise SyntaxError(f"Unexpected {token}")
-                    if current.num_children() == 0:
+                    if current.num_children == 0:
                         raise SyntaxError('Empty variant')
 
-                    if current.parent is not None and current.parent.parent is not None:
-                        current = current.parent.parent
+                    vargroup = current.parent
+                    current = vargroup.parent
+
+                    # Flatten group into a sequence, if it has just one variant
+                    if vargroup.num_children == 1:
+                        current.remove_child(vargroup)
+                        current.append_child(vargroup.last_child)
 
         # Check for unterminated expressions
         if current is not root:
@@ -220,4 +225,8 @@ class SyntaxParser:
                 path = f'{current.node_name} > {path}'
             raise SyntaxError(f'Unterminated expression: {path}')
 
-        return root
+        # Flatten if there is only one element in the root sequence
+        if root.num_children == 1:
+            return root.last_child
+        else:
+            return root
