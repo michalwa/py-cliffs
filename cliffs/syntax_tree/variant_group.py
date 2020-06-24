@@ -14,7 +14,7 @@ class VariantGroup(Identifiable, Node):
     """
 
     node_name = 'variant_group'
-    _eq_exclude = ['wrapped']
+    _eq_exclude = []
 
     def __init__(self):
         super().__init__()
@@ -30,17 +30,17 @@ class VariantGroup(Identifiable, Node):
 
     def __str__(self) -> str:
         children = '|'.join(str(child) for child in self.children)
-        return f'({children})' if not self.wrapped and self.parent is not None else children
+        return f'({children})' if not self.wrapped else children
 
     def flattened(self) -> Node:
         if self.num_children == 1:
             return self.last_child.as_plain_sequence()
         else:
-            # Only flatten variants
-            new = VariantGroup()
-            new.identifier = self.identifier
-            new.children = [child.flattened() for child in self.children]
-            return new
+            # Root variant group should be treated as wrapped (no parentheses)
+            flat = super().flattened()
+            if flat.parent is None:
+                flat.wrapped = True
+            return flat
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         first_fail = None

@@ -48,12 +48,15 @@ class SyntaxParser:
 
         self.symbol_list_class = kwargs.get('symbol_list_class', SymbolList)  # type: Type[SymbolList]
 
-    def parse(self, tokens: Iterable[Token]) -> Node:
+    def parse(self, tokens: Iterable[Token], flatten: bool = True) -> Node:
         """Parses the given sequence of tokens into a syntax tree.
 
         Parameters
         ----------
           * tokens: `Iterable[Token]` - The tokens to parse.
+          * flatten: `bool` - Whether to flatten the resulting syntax tree.
+            If False, a `Sequence` will be returned for any string of tokens.
+            Defaults to True.
 
         Returns
         -------
@@ -287,8 +290,8 @@ in {current.node_name}, maybe use parentheses?")
                 else:
                     raise SyntaxError(f"Unknown token: {token}")
 
-        # Leave unterminated variants
-        while isinstance(current, Variant):
+        # Leave unterminated variant
+        if isinstance(current, Variant):
             current = current.parent.parent
 
         # Check for unterminated expressions
@@ -299,16 +302,21 @@ in {current.node_name}, maybe use parentheses?")
                 path = f'{current.node_name} > {path}'
             raise SyntaxError(f'Unterminated expression: {path}')
 
-        # Manually flatten root sequence
-        if root.num_children == 1:
-            root = root.last_child
-            root.parent.remove_child(root)
+        if flatten:
 
-        # Flatten
-        flat_root = root.flattened()
+            # Manually flatten root sequence
+            if root.num_children == 1:
+                root = root.last_child
+                root.parent.remove_child(root)
 
-        if root != flat_root:
-            logging.getLogger('cliffs.syntax_parser').info(
-                'Syntax "%s" can be simplified to "%s"', root, flat_root)
+            # Flatten
+            flat_root = root.flattened()
 
-        return flat_root
+            if root != flat_root:
+                logging.getLogger('cliffs.syntax_parser').info(
+                    'Syntax "%s" can be simplified to "%s"', root, flat_root)
+
+            return flat_root
+
+        else:
+            return root
