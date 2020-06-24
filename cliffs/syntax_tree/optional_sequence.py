@@ -12,7 +12,7 @@ class OptionalSequence(Identifiable, Node):
     but will not interrupt parsing if it doesn't succeed.
     """
 
-    node_name = 'opt_sequence'
+    node_name = 'optional_sequence'
 
     def __str__(self) -> str:
         children = ' '.join(str(child) for child in self.children)

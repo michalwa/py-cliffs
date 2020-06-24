@@ -106,7 +106,7 @@ def command_repeat(n: int, what: str):
 
 
 # There will be an info message logged that this command can be simplified
-@cli.command('({(({exit}))})')
+@cli.command('exit|quit')
 def command_exit():
     print("Bye!")
     exit(0)

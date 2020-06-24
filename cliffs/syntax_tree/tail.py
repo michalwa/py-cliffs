@@ -12,6 +12,8 @@ class Tail(Leaf):
     """
 
     node_name = 'tail'
+    _init_attrs = ['name']
+    _copy_attrs = ['raw']
 
     def __init__(self, name: str):
         super().__init__()

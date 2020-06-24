@@ -11,6 +11,7 @@ class Literal(Leaf):
     """
 
     node_name = 'literal'
+    _init_attrs = ['value']
 
     def __init__(self, value: str):
         """Initializes a literal node.

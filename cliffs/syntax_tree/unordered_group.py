@@ -11,7 +11,7 @@ class UnorderedGroup(Node):
     Children of this group can be matched in an arbitrary order.
     """
 
-    node_name = 'unordered'
+    node_name = 'unordered_group'
 
     def __str__(self) -> str:
         return f"{{{' '.join(str(child) for child in self.children)}}}"

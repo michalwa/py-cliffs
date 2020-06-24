@@ -4,7 +4,7 @@ from ..token import Token
 from ..call_match import CallMatch, CallMatcher, CallMatchFail
 
 
-class Param(Leaf):
+class Parameter(Leaf):
     """A command parameter.
 
     Any token present in place of the parameter will be stored as the value
@@ -13,7 +13,8 @@ class Param(Leaf):
     Parameters may also specify types that will be checked upon matching.
     """
 
-    node_name = 'param'
+    node_name = 'parameter'
+    _init_attrs = ['name', 'typename']
 
     def __init__(self, name: str, typename: Optional[str] = None):
         """Initializes a parameter node.

@@ -141,7 +141,7 @@ class SyntaxParser:
                         if param_name is None:
                             raise SyntaxError('Empty parameter name')
 
-                        current.append_child(Param(symbols.register(param_name), param_type))
+                        current.append_child(Parameter(symbols.register(param_name), param_type))
                         param_name = None
                         param_type = None
                         state = 'NORMAL'
@@ -152,6 +152,82 @@ class SyntaxParser:
 
                     else:
                         raise SyntaxError(f"Unexpected {token}")
+
+                # Variant separator
+                elif token.value == '|':
+                    if state != 'NORMAL':
+                        raise SyntaxError(f"Unexpected {token}")
+
+                    if current.num_children == 0:
+                        raise SyntaxError(f"Unexpected {token}: Empty variant")
+
+                    if isinstance(current, Variant):
+                        # Construct a new variant and make it the current scope
+                        current = current.parent
+                        new_variant = Variant()
+                        current.append_child(new_variant)
+                        current = new_variant
+
+                    else:
+                        if not isinstance(current, (Sequence, OptionalSequence)):
+                            raise SyntaxError(f"Unexpected {token}: Cannot define variants \
+in {current.node_name}, maybe use parentheses?")
+
+                        # Convert the current node into a variant
+                        variant = Variant()
+                        for child in current.children:
+                            variant.append_child(child)
+                        current.children = []
+
+                        # Create a variant group and append the current variant to it
+                        group = VariantGroup()
+                        group.append_child(variant)
+
+                        if isinstance(current, Sequence) and current.parent is not None:
+                            # If this is the root node or something other than a plain sequence,
+                            # replace the entire sequence with the variant group
+                            current = current.parent
+                            current.remove_child(current.last_child)
+                            current.append_child(group)
+                        else:
+                            # Replace all children of the current node with the variant group
+                            group.wrapped = True
+                            current.append_child(group)
+
+                        # Construct a new variant and make it the current scope
+                        new_variant = Variant()
+                        group.append_child(new_variant)
+                        current = new_variant
+
+                # Opening sequence delimiter
+                elif token.value == '(':
+                    if state != 'NORMAL':
+                        raise SyntaxError(f"Unexpected {token}")
+
+                    child = Sequence()
+                    current.append_child(child)
+                    current = child
+
+                # Closing sequence delimiter
+                elif token.value == ')':
+                    if state != 'NORMAL':
+                        raise SyntaxError(f"Unexpected {token}")
+
+                    if not isinstance(current, Variant):
+                        if not isinstance(current, Sequence):
+                            raise SyntaxError(f"Unexpected {token}")
+                        if current.num_children == 0:
+                            raise SyntaxError(f"Unexpected {token}: Empty sequence")
+
+                        current = current.parent
+
+                    else:
+                        if current.parent.wrapped:
+                            raise SyntaxError(f"Unexpected {token}")
+                        if current.num_children == 0:
+                            raise SyntaxError(f"Unexpected {token}: Empty variant")
+
+                        current = current.parent.parent
 
                 # Opening optional sequence delimiter
                 elif token.value == '[':
@@ -164,54 +240,27 @@ class SyntaxParser:
 
                 # Closing optional sequence delimiter
                 elif token.value == ']':
-                    if state != 'NORMAL' or not isinstance(current, OptionalSequence):
-                        raise SyntaxError(f"Unexpected {token}")
-                    if current.num_children == 0:
-                        raise SyntaxError('Empty optional sequence')
-
-                    if current.parent is not None:
-                        current = current.parent
-
-                # Opening variant group delimiter
-                elif token.value == '(':
                     if state != 'NORMAL':
                         raise SyntaxError(f"Unexpected {token}")
 
-                    child = VariantGroup()
-                    grandchild = Variant()
-                    child.append_child(grandchild)
-                    current.append_child(child)
-                    current = grandchild
+                    if not isinstance(current, Variant):
+                        if not isinstance(current, OptionalSequence):
+                            raise SyntaxError(f"Unexpected {token}")
+                        if current.num_children == 0:
+                            raise SyntaxError(f"Unexpected {token}: Empty optional sequence")
 
-                # Variant group sequence separator
-                elif token.value == '|':
-                    if any([
-                        state != 'NORMAL',
-                        not isinstance(current, Variant),
-                        not isinstance(current.parent, VariantGroup)
-                    ]):
-                        raise SyntaxError(f"Unexpected {token}")
-                    if current.num_children == 0:
-                        raise SyntaxError('Empty variant')
+                        current = current.parent
 
-                    current = current.parent
-                    child = Variant()
-                    current.append_child(child)
-                    current = child
+                    else:
+                        if any([
+                            not current.parent.wrapped,
+                            not isinstance(current.parent.parent, OptionalSequence)
+                        ]):
+                            raise SyntaxError(f"Unexpected {token}")
+                        if current.num_children == 0:
+                            raise SyntaxError(f"Unexpected {token}: Empty variant")
 
-                # Closing variant group delimiter
-                elif token.value == ')':
-                    if any([
-                        state != 'NORMAL',
-                        not isinstance(current, Variant),
-                        not isinstance(current.parent, VariantGroup)
-                    ]):
-                        raise SyntaxError(f"Unexpected {token}")
-
-                    if current.num_children == 0:
-                        raise SyntaxError('Empty variant')
-
-                    current = current.parent.parent
+                        current = current.parent.parent.parent
 
                 # Unordered group delimiter
                 elif token.value == '{':
@@ -224,16 +273,23 @@ class SyntaxParser:
 
                 # Unordered group delimiter
                 elif token.value == '}':
-                    if state != 'NORMAL' or not isinstance(current, UnorderedGroup):
+                    if any([
+                        state != 'NORMAL',
+                        not isinstance(current, UnorderedGroup),
+                    ]):
                         raise SyntaxError(f"Unexpected {token}")
 
                     if current.num_children == 0:
-                        raise SyntaxError('Empty unordered group')
+                        raise SyntaxError(f"Unexpected {token}: Empty unordered group")
 
                     current = current.parent
 
                 else:
                     raise SyntaxError(f"Unknown token: {token}")
+
+        # Leave unterminated variants
+        while isinstance(current, Variant):
+            current = current.parent.parent
 
         # Check for unterminated expressions
         if current is not root:

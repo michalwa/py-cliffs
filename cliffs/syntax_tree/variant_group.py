@@ -13,7 +13,15 @@ class VariantGroup(Identifiable, Node):
     for the group to successfully match.
     """
 
-    node_name = 'var_group'
+    node_name = 'variant_group'
+    _eq_exclude = ['wrapped']
+
+    def __init__(self):
+        super().__init__()
+
+        # Whether this is a plain variant group in parentheses (False)
+        # or whether it is wrapped in another structure (True)
+        self.wrapped = False
 
     def append_child(self, child):
         if not isinstance(child, Variant):
@@ -22,7 +30,7 @@ class VariantGroup(Identifiable, Node):
 
     def __str__(self) -> str:
         children = '|'.join(str(child) for child in self.children)
-        return f"({children})"
+        return f'({children})' if not self.wrapped and self.parent is not None else children
 
     def flattened(self) -> Node:
         if self.num_children == 1:

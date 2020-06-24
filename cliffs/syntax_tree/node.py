@@ -1,4 +1,4 @@
-from typing import List, Optional, Iterable, Callable, Any
+from typing import List, Optional, Iterable
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher
 
@@ -8,9 +8,19 @@ class Node:
 
     node_name = 'node'
 
+    # Attributes to exclude in equality comparison
+    _eq_exclude = []  # type: List[str]
+
+    # Attributes to pass to __init__ when copying
+    _init_attrs = []  # type: List[str]
+
+    # Attributes to include when copying
+    _copy_attrs = ['parent']  # type: List[str]
+
     def __init__(self):
         self.parent = None  # type: Optional[Node]
         self.children = []  # type: List[Node]
+        self._eq_exclude += ['parent', 'children']
 
     def __repr__(self) -> str:
         r = f'{self.node_name}'
@@ -23,9 +33,11 @@ class Node:
             return False
 
         self_items = dict(self.__dict__)
-        self_items.pop('parent', 0)
         other_items = dict(other.__dict__)
-        other_items.pop('parent', 0)
+
+        for item in self._eq_exclude:
+            self_items.pop(item, 0)
+            other_items.pop(item, 0)
 
         return self_items == other_items and self.children == other.children
 
@@ -50,20 +62,7 @@ class Node:
         child.parent = None
         return self
 
-    def traverse(self, callback: Callable[['Node'], Any]) -> None:
-        """Recursively traverses the descendants of the node calling the callback
-        with each individual descendant (including this node itself).
-
-        Parameters
-        ----------
-          * callback: `(Node) -> *` - The callback to call with each descendant.
-        """
-
-        callback(self)
-        for child in self.children:
-            child.traverse(callback)
-
-    def iter_traverse(self) -> Iterable['Node']:
+    def traverse(self) -> Iterable['Node']:
         """Recursively constructs an iterator that will traverse the descendants
         of this node (including this node itself).
 
@@ -78,16 +77,18 @@ class Node:
                 yield leaf
 
     def flattened(self) -> 'Node':
-        """Creates a flattened version (not necessarily copy) of this node with
-        minimized number of generations of descendants.
+        """Recusively creates a flattened copy of this node with minimized number
+        of levels of descendants.
         """
 
-        new = self.__class__()
+        new = self.__class__(*(self.__getattribute__(k) for k in self._init_attrs))
         for k, v in self.__dict__.items():
-            if k != 'children':
+            if k in self._copy_attrs:
                 new.__setattr__(k, v)
 
-        new.children = [child.flattened() for child in self.children]
+        for child in self.children:
+            new.append_child(child.flattened())
+
         return new
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
@@ -121,6 +122,3 @@ class Leaf(Node):
 
     def append_child(self, child: Node) -> Node:
         raise ValueError(f"Node of type {self.node_name} cannot have children")
-
-    def flattened(self) -> Node:
-        return self
