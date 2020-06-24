@@ -22,7 +22,8 @@ class Command:
         -----------------
           * lexer: `CallLexer` - The lexer to use to tokenize incoming calls.
           * matcher: `CallMatcher` - The matcher to use to match calls against the syntax of this command.
-          * description: `str` - The description to include in the usage help message.
+          * description: `str` - The description to include in the usage help message. Ignored if hidden is True.
+          * hidden: `bool` - Whether the usage help message should exclude this command entirely.
         """
 
         self.syntax = syntax
@@ -30,6 +31,7 @@ class Command:
         self.lexer = dict_get_lazy(kwargs, 'lexer', CallLexer)  # type: CallLexer
         self.matcher = dict_get_lazy(kwargs, 'matcher', CallMatcher)  # type: CallMatcher
         self.description = kwargs.get('description', None)  # type: Optional[str]
+        self.hidden = kwargs.get('hidden', False)
 
     def match(self, call: str, match: CallMatch):
         """Tries to match the given call to this command's syntax and populates
@@ -87,6 +89,9 @@ class Command:
         -------
           * `Iterable[str]`: The lines of the usage help message.
         """
+
+        if self.hidden:
+            return []
 
         max_width = kwargs.get('max_width', 100)
         indent_width = kwargs.get('indent_width', 4)

@@ -1,6 +1,6 @@
 import sys
 import logging
-from typing import Optional, Iterable
+from typing import Optional
 from datetime import datetime
 from time import struct_time, strptime, strftime
 
@@ -83,15 +83,6 @@ def command_tell_time(now: datetime):
     print(f"The time is {now}")
 
 
-# You can assign custom classes to specific commands
-class HiddenCommand(Command):
-    def __init__(self, stx, callback, **kwargs):
-        super().__init__(stx, callback, **kwargs)
-
-    def get_usage_lines(self, **kwargs) -> Iterable[str]:
-        return []
-
-
 # Commands don't have to start with a literal.
 #
 # Keep in mind though that when matching fails, the most likely command will be guessed
@@ -99,7 +90,7 @@ class HiddenCommand(Command):
 #
 # For example, when calling: `6 alarm at`, even though more tokens match the
 # "set alarm at ..." command, the command below will be reported as missing arguments.
-@cli.command('<n:int> times say <what>', command_class=HiddenCommand)
+@cli.command('<n:int> times say <what>', hidden=True)
 def command_repeat(n: int, what: str):
     for _ in range(n):
         print(what)
@@ -112,7 +103,9 @@ def command_exit():
     exit(0)
 
 
-# All callback parameters are optional and indicate what the callback needs to recieve
+# All callback parameters are optional and indicate what the callback needs to recieve.
+#
+# You can override the matcher (and lexer) for every command.
 @cli.command('help', matcher=CallMatcher(case_sensitive=False), description='Displays this help message')
 def command_help():
     print('Known commands')

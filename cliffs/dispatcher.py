@@ -26,6 +26,7 @@ class CommandDispatcher:
         -----------------
           * lexer: `SyntaxLexer` - The lexer to use to tokenize syntax strings for new commands.
           * parser: `SyntaxParser` - The syntax parser to use to parse the syntax for new commands.
+          * command_class: `Type[Command]` - The class to construct for new commands.
           * call_lexer: `CallLexer` - The lexer to pass to new commands for tokenizing calls.
           * matcher: `CallMatcher` - The matcher to pass to new commands for matching calls.
         """
@@ -33,6 +34,7 @@ class CommandDispatcher:
         self._commands = []  # type: List[Command]
         self.lexer = dict_get_lazy(kwargs, 'lexer', SyntaxLexer)  # type: SyntaxLexer
         self.parser = dict_get_lazy(kwargs, 'parser', SyntaxParser)  # type: SyntaxParser
+        self.command_class = kwargs.get('command_class', Command)  # type: Type[Command]
 
         self._command_kwargs = {}
         if 'call_lexer' in kwargs:
@@ -60,7 +62,10 @@ class CommandDispatcher:
 
         Keyword arguments
         -----------------
-          * command_class: `Type[Command]` - The class to instantiate for this command.
+          * command_class: `Type[Command]` - The class to instantiate for this command
+            (overrides the command class this dispatcher was initialized with).
+
+        Refer to `Command.__init__` for additional keyword arguments.
 
         Returns
         -------
@@ -68,7 +73,7 @@ class CommandDispatcher:
         """
 
         st_root = self.parser.parse(self.lexer.tokenize(syntax))
-        command_class = kwargs['command_class'] if 'command_class' in kwargs else Command  # type: Type[Command]
+        command_class = kwargs.pop('command_class', self.command_class)  # type: Type[Command]
 
         def decorator(f: Callable) -> Command:
             for k, v in self._command_kwargs.items():
