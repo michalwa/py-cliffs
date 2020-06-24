@@ -142,8 +142,12 @@ class SyntaxParser:
                         state = 'BEFORE_PARAM_TYPE'
 
                     # Group identifier separator
-                    elif state == 'NORMAL' and isinstance(current.last_child, Identifiable):
-                        state = 'BEFORE_IDENTIFIER'
+                    elif state == 'NORMAL':
+                        if isinstance(current.last_child, Identifiable):
+                            state = 'BEFORE_IDENTIFIER'
+                        else:
+                            raise SyntaxError(f"Unexpected {token}: Cannot assign identifier \
+to {current.last_child.node_name}")
 
                     else:
                         raise SyntaxError(f"Unexpected {token}")

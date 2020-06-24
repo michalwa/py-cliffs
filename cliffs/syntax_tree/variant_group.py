@@ -39,8 +39,7 @@ class VariantGroup(Identifiable, Node):
             flat = super().flattened()
 
             # Decide whether the ideal variant group should have no parentheses around it
-            flat.wrapped = flat.parent is None or flat.parent.num_children == 1 and not\
-                (isinstance(flat.parent, Identifiable) and None not in (flat.parent.identifier, flat.identifier))
+            flat.wrapped = (flat.parent is None or flat.parent.num_children == 1) and flat.identifier is None
 
             return flat
 
