@@ -1,5 +1,6 @@
 from typing import Optional, Callable, Iterable
 from inspect import signature
+from .utils import dict_get_lazy
 from .syntax_tree import Node as SyntaxNode
 from .call_lexer import CallLexer
 from .call_match import CallMatcher, CallMatch, CallMatchFail
@@ -16,12 +17,18 @@ class Command:
         ----------
           * syntax: `StNode` - The root of the syntax tree for this command.
           * callback: `(...) -> *` - The callback.
+
+        Keyword arguments
+        -----------------
+          * lexer: `CallLexer` - The lexer to use to tokenize incoming calls.
+          * matcher: `CallMatcher` - The matcher to use to match calls against the syntax of this command.
+          * description: `str` - The description to include in the usage help message.
         """
 
         self.syntax = syntax
         self.callback = callback
-        self.lexer = kwargs['lexer'] if 'lexer' in kwargs else CallLexer()
-        self.matcher = kwargs['matcher'] if 'matcher' in kwargs else CallMatcher()
+        self.lexer = dict_get_lazy(kwargs, 'lexer', CallLexer)  # type: CallLexer
+        self.matcher = dict_get_lazy(kwargs, 'matcher', CallMatcher)  # type: CallMatcher
         self.description = kwargs.get('description', None)  # type: Optional[str]
 
     def match(self, call: str, match: CallMatch):

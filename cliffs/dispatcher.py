@@ -1,5 +1,5 @@
 from typing import Any, Callable, Iterable, List, Optional, Type
-
+from .utils import dict_get_lazy
 from .call_match import CallMatch, CallMatchFail
 from .command import Command
 from .syntax_lexer import SyntaxLexer
@@ -24,13 +24,21 @@ class CommandDispatcher:
 
         Keyword arguments
         -----------------
-          * syntax_parser: `SyntaxParser` - The syntax parser to use to parse new commands.
-          * syntax_lexer: `SyntaxLexer` - The lexer to use to
+          * lexer: `SyntaxLexer` - The lexer to use to tokenize syntax strings for new commands.
+          * parser: `SyntaxParser` - The syntax parser to use to parse the syntax for new commands.
+          * call_lexer: `CallLexer` - The lexer to pass to new commands for tokenizing calls.
+          * matcher: `CallMatcher` - The matcher to pass to new commands for matching calls.
         """
 
         self._commands = []  # type: List[Command]
-        self.syntax_parser = kwargs['syntax_parser'] if 'syntax_parser' in kwargs else SyntaxParser()
-        self.syntax_lexer = kwargs['syntax_lexer'] if 'syntax_lexer' in kwargs else SyntaxLexer()
+        self.lexer = dict_get_lazy(kwargs, 'lexer', SyntaxLexer)  # type: SyntaxLexer
+        self.parser = dict_get_lazy(kwargs, 'parser', SyntaxParser)  # type: SyntaxParser
+
+        self._command_kwargs = {}
+        if 'call_lexer' in kwargs:
+            self._command_kwargs['lexer'] = kwargs['call_lexer']
+        if 'matcher' in kwargs:
+            self._command_kwargs['matcher'] = kwargs['matcher']
 
     def register(self, command: Command) -> None:
         """Registers the given command.
@@ -59,10 +67,14 @@ class CommandDispatcher:
           * `Command`: The constructed, registered command.
         """
 
-        st_root = self.syntax_parser.parse(self.syntax_lexer.tokenize(syntax))
+        st_root = self.parser.parse(self.lexer.tokenize(syntax))
         command_class = kwargs['command_class'] if 'command_class' in kwargs else Command  # type: Type[Command]
 
         def decorator(f: Callable) -> Command:
+            for k, v in self._command_kwargs.items():
+                if k not in kwargs:
+                    kwargs[k] = v
+
             cmd = command_class(st_root, f, **kwargs)
             self.register(cmd)
             return cmd

@@ -17,15 +17,15 @@ sh.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
 logger.addHandler(sh)
 
 
-cli = CommandDispatcher()
-
 # You can use custom call matchers to define custom parameter types.
 custom_matcher = CallMatcher()
 custom_matcher.register_type(lambda s: strptime(s, '%I:%M'), '12h_time')
 
+cli = CommandDispatcher(matcher=custom_matcher)
+
 
 # The decorator registers the function as the callback for the specified command
-@cli.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message...*>]', matcher=custom_matcher)
+@cli.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message...*>]')
 def command_set_alarm(match: CallMatch):
 
     # The callback recieves a `match` object describing the configuration

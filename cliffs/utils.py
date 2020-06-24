@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Callable
 
 
 class StrBuffer:
@@ -85,3 +85,7 @@ def loose_bool(s: str) -> bool:
 
     else:
         raise ValueError(f"String '{s}' cannot be loosely casted to a boolean")
+
+
+def dict_get_lazy(dict: Dict, key, fn_default: Callable):
+    return dict[key] if key in dict else fn_default()
