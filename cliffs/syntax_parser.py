@@ -99,9 +99,10 @@ class SyntaxParser:
                     # The variant group should be identified instead of the parent group; as if it were [(a|b|c):id]
                     # unless the variant group had parentheses around it
                     if group.num_children == 1 and isinstance(group.last_child, VariantGroup) and\
-                            group.last_child.wrapped:
+                            not group.last_child.wrapped:
 
                         group.last_child.identifier = symbols.register(token.value)
+                        group.last_child.inherited_identifier = True
 
                     else:
                         group.identifier = symbols.register(token.value)
@@ -209,7 +210,7 @@ in {current.node_name}, maybe use parentheses?")
                             current.append_child(group)
                         else:
                             # Replace all children of the current node with the variant group
-                            group.wrapped = True
+                            group.wrapped = False
                             current.append_child(group)
 
                         # Construct a new variant and make it the current scope
@@ -240,7 +241,7 @@ in {current.node_name}, maybe use parentheses?")
                         current = current.parent
 
                     else:
-                        if current.parent.wrapped:
+                        if not current.parent.wrapped:
                             raise SyntaxError(f"Unexpected {token}")
                         if current.num_children == 0:
                             raise SyntaxError(f"Unexpected {token}: Empty variant")
@@ -271,7 +272,7 @@ in {current.node_name}, maybe use parentheses?")
 
                     else:
                         if any([
-                            not current.parent.wrapped,
+                            current.parent.wrapped,
                             not isinstance(current.parent.parent, OptionalSequence)
                         ]):
                             raise SyntaxError(f"Unexpected {token}")

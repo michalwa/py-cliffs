@@ -15,13 +15,16 @@ class VariantGroup(Identifiable, Node):
 
     node_name = 'variant_group'
     _eq_exclude = []
+    _copy_attrs = ['inherited_identifier']
 
     def __init__(self):
         super().__init__()
 
-        # Whether this is a plain variant group in parentheses (False)
-        # or whether it is wrapped in another structure (True)
-        self.wrapped = False
+        # Whether this variant group must be wrapped in parentheses
+        self.wrapped = True
+
+        # Whether the identifier for this group was inherited from the parent node
+        self.inherited_identifier = False
 
     def append_child(self, child):
         if not isinstance(child, Variant):
@@ -30,7 +33,7 @@ class VariantGroup(Identifiable, Node):
 
     def __str__(self) -> str:
         children = '|'.join(str(child) for child in self.children)
-        return f'({children})' if not self.wrapped else children
+        return f'({children})' if self.wrapped else children
 
     def flattened(self) -> Node:
         if self.num_children == 1:
@@ -38,8 +41,12 @@ class VariantGroup(Identifiable, Node):
         else:
             flat = super().flattened()
 
-            # Decide whether the ideal variant group should have no parentheses around it
-            flat.wrapped = (flat.parent is None or flat.parent.num_children == 1) and flat.identifier is None
+            # Decide whether the variant group should have parentheses around it:
+            #
+            # Wrap in parentheses if there is a parent and this group isn't its only child
+            # or if this group has an identifier assigned that is not inherited from its parent
+            flat.wrapped = self.parent is not None and self.parent.num_children != 1 or\
+                self.identifier is not None and not self.inherited_identifier
 
             return flat
 
