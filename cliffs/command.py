@@ -81,7 +81,7 @@ class Command:
           * `Iterable[str]`: The lines of the usage help message.
         """
 
-        max_width = kwargs.get('max_width', 70)
+        max_width = kwargs.get('max_width', 100)
         indent_width = kwargs.get('indent_width', 4)
 
         if max_width != 0:

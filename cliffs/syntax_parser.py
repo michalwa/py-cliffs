@@ -94,7 +94,18 @@ class SyntaxParser:
                 # Group identifiers
                 elif state == 'BEFORE_IDENTIFIER':
                     group = current.last_child
-                    group.identifier = symbols.register(token.value)
+
+                    # If assining identifier to a wrapper around a variant group, e.g. [a|b|c]:id
+                    # The variant group should be identified instead of the parent group; as if it were [(a|b|c):id]
+                    # unless the variant group already has an identifier
+                    if group.num_children == 1 and isinstance(group.last_child, VariantGroup) and\
+                            group.last_child.identifier is None:
+
+                        group.last_child.identifier = symbols.register(token.value)
+
+                    else:
+                        group.identifier = symbols.register(token.value)
+
                     state = 'NORMAL'
 
                 # Literals

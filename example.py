@@ -56,7 +56,7 @@ def command_set_alarm(match: CallMatch):
 # Nothing can follow such parameters, anything after it will cause a `SyntaxError`.
 #
 # You can pass parameters directly as arguments to a callback.
-@cli.command('(eval|=) <expr...*>', description='Evaluates a given expression.')
+@cli.command('(eval | =) <expr...*>', description='Evaluates a given expression.')
 def command_eval(expr: str):
 
     # Command callbacks can return values which will be passed to the caller of `dispatch()`

@@ -133,6 +133,11 @@ class CommandDispatcher:
           * separator: `str` (optional) - The separator to use to separate blocks
             of lines returned by individual commands. Defaults to None.
 
+        Keyword arguments
+        -----------------
+          * max_width: `int` - The width to wrap the usage help message to (0 for no wrapping).
+          * indent_width: `int` - The width of the indent for the command description.
+
         Returns
         -------
           * `Iterable[str]`: The individual lines of the usage help message.

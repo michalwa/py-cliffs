@@ -36,10 +36,12 @@ class VariantGroup(Identifiable, Node):
         if self.num_children == 1:
             return self.last_child.as_plain_sequence()
         else:
-            # Root variant group should be treated as wrapped (no parentheses)
             flat = super().flattened()
-            if flat.parent is None:
-                flat.wrapped = True
+
+            # Decide whether the ideal variant group should have no parentheses around it
+            flat.wrapped = flat.parent is None or flat.parent.num_children == 1 and not\
+                (isinstance(flat.parent, Identifiable) and None not in (flat.parent.identifier, flat.identifier))
+
             return flat
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
