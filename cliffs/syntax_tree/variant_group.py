@@ -15,7 +15,7 @@ class VariantGroup(Identifiable, Node):
 
     node_name = 'variant_group'
     _eq_exclude = []
-    _copy_attrs = ['inherited_identifier']
+    _copy_attrs = ['parent', 'inherited_identifier']
 
     def __init__(self):
         super().__init__()
@@ -45,8 +45,8 @@ class VariantGroup(Identifiable, Node):
             #
             # Wrap in parentheses if there is a parent and this group isn't its only child
             # or if this group has an identifier assigned that is not inherited from its parent
-            flat.wrapped = self.parent is not None and self.parent.num_children != 1 or\
-                self.identifier is not None and not self.inherited_identifier
+            flat.wrapped = flat.parent is not None and flat.parent.num_children != 1 or\
+                flat.identifier is not None and not flat.inherited_identifier
 
             return flat
 
