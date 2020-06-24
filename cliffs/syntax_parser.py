@@ -178,7 +178,7 @@ class SyntaxParser:
                         raise SyntaxError(f"Unexpected {token}")
 
                     child = VariantGroup()
-                    grandchild = Sequence()
+                    grandchild = Variant()
                     child.append_child(grandchild)
                     current.append_child(child)
                     current = grandchild
@@ -187,7 +187,7 @@ class SyntaxParser:
                 elif token.value == '|':
                     if any([
                         state != 'NORMAL',
-                        not isinstance(current, Sequence),
+                        not isinstance(current, Variant),
                         not isinstance(current.parent, VariantGroup)
                     ]):
                         raise SyntaxError(f"Unexpected {token}")
@@ -195,7 +195,7 @@ class SyntaxParser:
                         raise SyntaxError('Empty variant')
 
                     current = current.parent
-                    child = Sequence()
+                    child = Variant()
                     current.append_child(child)
                     current = child
 
@@ -203,7 +203,7 @@ class SyntaxParser:
                 elif token.value == ')':
                     if any([
                         state != 'NORMAL',
-                        not isinstance(current, Sequence),
+                        not isinstance(current, Variant),
                         not isinstance(current.parent, VariantGroup)
                     ]):
                         raise SyntaxError(f"Unexpected {token}")
@@ -211,12 +211,7 @@ class SyntaxParser:
                     if current.num_children == 0:
                         raise SyntaxError('Empty variant')
 
-                    vargroup = current.parent
-                    current = vargroup.parent
-
-                    # Manually flatten single-variant variant groups into plain sequences
-                    if vargroup.num_children == 1:
-                        current.remove_child(vargroup).append_child(vargroup.last_child)
+                    current = current.parent.parent
 
                 # Unordered group delimiter
                 elif token.value == '{':
@@ -247,6 +242,11 @@ class SyntaxParser:
                 current = current.parent
                 path = f'{current.node_name} > {path}'
             raise SyntaxError(f'Unterminated expression: {path}')
+
+        # Manually flatten root sequence
+        if root.num_children == 1:
+            root = root.last_child
+            root.parent.remove_child(root)
 
         # Flatten
         flat_root = root.flattened()

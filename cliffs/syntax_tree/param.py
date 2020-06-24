@@ -34,8 +34,8 @@ class Param(Leaf):
         else:
             return f'<{self.name}: {self.typename}>'
 
-    def debug(self) -> str:
-        return f'param("{self.name}")'
+    def __repr__(self) -> str:
+        return f'param {repr(self.name)}'
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) < 1:

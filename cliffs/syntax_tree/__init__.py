@@ -6,8 +6,8 @@ from .tail import Tail
 from .sequence import Sequence
 from .optional_sequence import OptionalSequence
 from .unordered_group import UnorderedGroup
-from .variant_group import VariantGroup
+from .variant_group import VariantGroup, Variant
 
 __all__ = [
     'Node', 'Leaf', 'Identifiable', 'Literal', 'Param', 'Tail', 'Sequence',
-    'OptionalSequence', 'UnorderedGroup', 'VariantGroup']
+    'OptionalSequence', 'UnorderedGroup', 'VariantGroup', 'Variant']

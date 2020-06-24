@@ -87,8 +87,7 @@ class Node:
             if k != 'children':
                 new.__setattr__(k, v)
 
-        for child in self.children:
-            new.append_child(child.flattened())
+        new.children = [child.flattened() for child in self.children]
         return new
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:

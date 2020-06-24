@@ -16,8 +16,8 @@ class VariantGroup(Identifiable, Node):
     node_name = 'var_group'
 
     def append_child(self, child):
-        if not isinstance(child, Sequence):
-            raise ValueError('Variant group children must be of type Sequence')
+        if not isinstance(child, Variant):
+            raise ValueError('Variant group children must be of type Variant')
         return super().append_child(child)
 
     def __str__(self) -> str:
@@ -26,7 +26,7 @@ class VariantGroup(Identifiable, Node):
 
     def flattened(self) -> Node:
         if self.num_children == 1:
-            return self.last_child.flattened()
+            return self.last_child.as_plain_sequence()
         else:
             # Only flatten variants
             new = VariantGroup()
@@ -58,3 +58,20 @@ class VariantGroup(Identifiable, Node):
             raise first_fail
         else:
             raise CallMatchFail('No variant present')
+
+
+class Variant(Sequence):
+    """A sequence that is one of the variants of a variant group."""
+
+    node_name = 'variant'
+
+    def __str__(self):
+        return ' '.join(str(child) for child in self.children)
+
+    def flattened(self):
+        return Node.flattened(self)
+
+    def as_plain_sequence(self) -> Sequence:
+        seq = Sequence()
+        seq.children = [child.flattened() for child in self.children]
+        return seq

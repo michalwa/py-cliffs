@@ -56,7 +56,7 @@ def command_set_alarm(match: CallMatch):
 # Nothing can follow such parameters, anything after it will cause a `SyntaxError`.
 #
 # You can pass parameters directly as arguments to a callback.
-@cli.command('eval <expr...*>', description='Evaluates a given expression.')
+@cli.command('(eval|=) <expr...*>', description='Evaluates a given expression.')
 def command_eval(expr: str):
 
     # Command callbacks can return values which will be passed to the caller of `dispatch()`
@@ -114,7 +114,7 @@ def command_exit():
 
 # All callback parameters are optional and indicate what the callback needs to recieve
 @cli.command('help', matcher=CallMatcher(case_sensitive=False), description='Displays this help message')
-def command_show_help():
+def command_help():
     print('Known commands')
     print('--------------')
 

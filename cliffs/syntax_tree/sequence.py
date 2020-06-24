@@ -13,14 +13,9 @@ class Sequence(Node):
     node_name = 'sequence'
 
     def __str__(self) -> str:
+        # Render root sequence without parentheses
         s = ' '.join(str(child) for child in self.children)
-        return f'({s})' if self.parent is not None and self.parent.node_name != 'var_group' else s
-
-    def __eq__(self, other) -> bool:
-        if self.num_children == 1 and other == self.last_child:
-            return True
-        else:
-            return super().__eq__(other)
+        return f'({s})' if self.parent is not None else s
 
     def flattened(self) -> str:
         if self.num_children == 1:

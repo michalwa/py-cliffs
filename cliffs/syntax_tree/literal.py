@@ -26,8 +26,8 @@ class Literal(Leaf):
     def __str__(self) -> str:
         return self.value
 
-    def debug(self) -> str:
-        return f'literal("{self.value}")'
+    def __repr__(self) -> str:
+        return f'literal {repr(self.value)}'
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) < 1:

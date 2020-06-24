@@ -23,6 +23,9 @@ class Tail(Leaf):
     def __str__(self) -> str:
         return f"<{self.name}...>"
 
+    def __repr__(self) -> str:
+        return ('raw ' if self.raw else '') + f'tail {repr(self.name)}'
+
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if self.raw:
             if len(tokens) == 0:
