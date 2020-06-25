@@ -44,6 +44,11 @@ class Node:
     def __neq__(self, other) -> bool:
         return not self == other
 
+    def __contains__(self, other) -> bool:
+        """Returns True if the given object is a descendant of this node."""
+
+        return other in self.children or any(other in child for child in self.children)
+
     @property
     def last_child(self) -> Optional['Node']:
         return self.children[-1] if len(self.children) > 0 else None
@@ -60,6 +65,13 @@ class Node:
     def remove_child(self, child: 'Node') -> 'Node':
         self.children.remove(child)
         child.parent = None
+        return self
+
+    def child_index(self, child: 'Node') -> int:
+        return self.children.index(child)
+
+    def insert_child(self, index: int, child: 'Node') -> 'Node':
+        self.children.insert(index, child)
         return self
 
     def traverse(self) -> Iterable['Node']:
@@ -121,4 +133,7 @@ class Leaf(Node):
     """A node that cannot have children"""
 
     def append_child(self, child: Node) -> Node:
+        raise ValueError(f"Node of type {self.node_name} cannot have children")
+
+    def insert_child(self, index: int, child: Node) -> Node:
         raise ValueError(f"Node of type {self.node_name} cannot have children")

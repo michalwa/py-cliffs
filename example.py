@@ -77,8 +77,10 @@ def command_like_bread(negation: bool, food: int):
         print(f"I don't like {food_name} either")
 
 
+# Unordered groups match elements in arbitrary order (they must still match all of them)
+#
 # Command callbacks can also recieve additional arguments from the caller of `dispatch()`
-@cli.command('tell time', description='Tells the date and time')
+@cli.command('{tell time}', description='Tells the date and time')
 def command_tell_time(now: datetime):
     print(f"The time is {now}")
 
@@ -97,7 +99,7 @@ def command_repeat(n: int, what: str):
 
 
 # There will be an info message logged that this command can be simplified
-@cli.command('(exit|quit)')
+@cli.command('exit|(quit|(bye|(leave)))')
 def command_exit():
     print("Bye!")
     exit(0)

@@ -43,20 +43,29 @@ class SyntaxParser:
 
         Keyword arguments
         -----------------
+          * flatten_mode: `str`:
+            - 'off': Parsed trees will not be flattened.
+            - 'warn' (default): Parsed trees will be flattened and compared against non-flattened trees,
+                which will be returned. Any possible simplification will be logged to
+                `cliffs.syntax_parser` as an info message.
+            - 'on': Parsed trees will be flattened. Any applied simplification
+                will be logged to `cliffs.syntax_parser` as an info message.
+
           * symbol_list_class: `Type[SymbolList]` - The symbol list class to use when parsing.
+            Defaults to SymbolList.
         """
+
+        self.flatten_mode = kwargs['flatten_mode'] if 'flatten_mode' in kwargs\
+            and kwargs['flatten_mode'] in ('off', 'warn', 'on') else 'warn'
 
         self.symbol_list_class = kwargs.get('symbol_list_class', SymbolList)  # type: Type[SymbolList]
 
-    def parse(self, tokens: Iterable[Token], flatten: bool = True) -> Node:
+    def parse(self, tokens: Iterable[Token]) -> Node:
         """Parses the given sequence of tokens into a syntax tree.
 
         Parameters
         ----------
           * tokens: `Iterable[Token]` - The tokens to parse.
-          * flatten: `bool` - Whether to flatten the resulting syntax tree.
-            If False, a `Sequence` will be returned for any string of tokens.
-            Defaults to True.
 
         Returns
         -------
@@ -318,21 +327,32 @@ in {current.node_name}, maybe use parentheses?")
                 path = f'{current.node_name} > {path}'
             raise SyntaxError(f'Unterminated expression: {path}')
 
-        if flatten:
+        # Finalize
+        if self.flatten_mode == 'off':
+            return root
 
+        else:
             # Manually flatten root sequence
             if root.num_children == 1:
                 root = root.last_child
                 root.parent.remove_child(root)
 
-            # Flatten
+            # Flatten recursively
             flat_root = root.flattened()
 
-            if root != flat_root:
-                logging.getLogger('cliffs.syntax_parser').info(
-                    'Syntax "%s" can be simplified to "%s"', root, flat_root)
+            if self.flatten_mode == 'warn':
+                if root != flat_root:
+                    logging.getLogger('cliffs.syntax_parser').info(
+                        'Syntax "%s" can be simplified to "%s"', root, flat_root)
 
-            return flat_root
+                return root
 
-        else:
-            return root
+            elif self.flatten_mode == 'on':
+                if root != flat_root:
+                    logging.getLogger('cliffs.syntax_parser').info(
+                        'Syntax "%s" simplified to "%s"', root, flat_root)
+
+                return flat_root
+
+            else:
+                raise ValueError(f"Unknown flatten_mode: {self.flatten_mode}")

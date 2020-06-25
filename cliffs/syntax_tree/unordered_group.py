@@ -24,7 +24,8 @@ class UnorderedGroup(Node):
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
 
-        first_fail = None
+        best_fail = None
+        best_score = 0
         matches = []
 
         for perm in permutations(self.children):
@@ -38,8 +39,16 @@ class UnorderedGroup(Node):
                 matches.append((match_temp, tokens_temp))
 
             except CallMatchFail as fail:
-                if first_fail is None:
-                    first_fail = fail
+                if match_temp.score > best_score:
+                    best_fail = fail
+                    best_score = match_temp.score
+
+            finally:
+                if match_temp.score > best_score:
+                    best_score = match_temp.score
+
+        # Add the final best score to the total match score
+        match.score += best_score
 
         # Choose best scoring match
         if matches != []:
@@ -49,7 +58,7 @@ class UnorderedGroup(Node):
 
         # If there was no successful permutation found, fail
         else:
-            if first_fail is not None:
-                raise first_fail
+            if best_fail is not None:
+                raise best_fail
             else:
                 raise CallMatchFail('Unmatched unordered group')

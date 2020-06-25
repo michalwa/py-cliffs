@@ -26,10 +26,15 @@ class VariantGroup(Identifiable, Node):
         # Whether the identifier for this group was inherited from the parent node
         self.inherited_identifier = False
 
-    def append_child(self, child):
+    def append_child(self, child: Node) -> Node:
         if not isinstance(child, Variant):
             raise ValueError('Variant group children must be of type Variant')
         return super().append_child(child)
+
+    def insert_child(self, index: int, child: Node) -> Node:
+        if not isinstance(child, Variant):
+            raise ValueError('Variant group children must be of type Variant')
+        return super().insert_child(index, child)
 
     def __str__(self) -> str:
         children = '|'.join(str(child) for child in self.children)
@@ -45,8 +50,19 @@ class VariantGroup(Identifiable, Node):
             #
             # Wrap in parentheses if there is a parent and this group isn't its only child
             # or if this group has an identifier assigned that is not inherited from its parent
-            flat.wrapped = flat.parent is not None and flat.parent.num_children != 1 or\
-                flat.identifier is not None and not flat.inherited_identifier
+            flat.wrapped = flat.parent is not None and flat.parent.num_children != 1\
+                or flat.identifier is not None and not flat.inherited_identifier
+
+            # Unpack nested variant groups
+            for variant in list(flat.children):
+                if variant.num_children == 1 and isinstance(variant.last_child, VariantGroup)\
+                        and not variant.last_child.wrapped:
+
+                    i = flat.child_index(variant)
+                    flat.remove_child(variant)
+                    for subvariant in variant.last_child.children:
+                        flat.insert_child(i, subvariant)
+                        i += 1
 
             return flat
 
