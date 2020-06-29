@@ -42,7 +42,7 @@ class VariantGroup(Identifiable, Node):
 
     def flattened(self) -> Node:
         if self.num_children == 1:
-            return self.last_child.as_plain_sequence()
+            return self.last_child.flattened_sequence()
         else:
             flat = super().flattened()
 
@@ -103,7 +103,5 @@ class Variant(Sequence):
     def flattened(self):
         return Node.flattened(self)
 
-    def as_plain_sequence(self) -> Sequence:
-        seq = Sequence()
-        seq.children = [child.flattened() for child in self.children]
-        return seq
+    def flattened_sequence(self) -> Sequence:
+        return Sequence.flattened(self)

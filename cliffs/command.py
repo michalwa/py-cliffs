@@ -33,6 +33,14 @@ class Command:
         self.description = kwargs.get('description', None)  # type: Optional[str]
         self.hidden = kwargs.get('hidden', False)
 
+        if self.description is not None:
+            # Remove leading and trailing empty lines
+            self.description = self.description.strip('\n')
+
+            # Remove leading whitespace from each line
+            desc_lines = self.description.splitlines(keepends=True)
+            self.description = ''.join(line.lstrip() for line in desc_lines)
+
     def match(self, call: str, match: CallMatch):
         """Tries to match the given call to this command's syntax and populates
         the given match instance.

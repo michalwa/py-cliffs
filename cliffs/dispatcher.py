@@ -80,6 +80,10 @@ class CommandDispatcher:
                 if k not in kwargs:
                     kwargs[k] = v
 
+            # Read docstring if 'description' parameter is not given
+            if 'description' not in kwargs and f.__doc__ is not None:
+                kwargs['description'] = f.__doc__
+
             cmd = command_class(st_root, f, **kwargs)
             self.register(cmd)
             return cmd

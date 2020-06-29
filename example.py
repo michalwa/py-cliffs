@@ -108,8 +108,13 @@ def command_exit():
 # All callback parameters are optional and indicate what the callback needs to recieve.
 #
 # You can override the matcher (and lexer) for every command.
-@cli.command('help', matcher=CallMatcher(case_sensitive=False), description='Displays this help message')
+#
+# The description will be read from the the docstring unless the description parameter
+# is present.
+@cli.command('help', matcher=CallMatcher(case_sensitive=False))
 def command_help():
+    """Displays this help message"""
+
     print('Known commands')
     print('--------------')
 
