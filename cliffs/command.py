@@ -33,14 +33,6 @@ class Command:
         self.description = kwargs.get('description', None)  # type: Optional[str]
         self.hidden = kwargs.get('hidden', False)
 
-        if self.description is not None:
-            # Remove leading and trailing empty lines
-            self.description = self.description.strip('\n')
-
-            # Remove leading whitespace from each line
-            desc_lines = self.description.splitlines(keepends=True)
-            self.description = ''.join(line.lstrip() for line in desc_lines)
-
     def match(self, call: str, match: CallMatch):
         """Tries to match the given call to this command's syntax and populates
         the given match instance.
@@ -115,10 +107,16 @@ class Command:
                 wrap_options = {
                     'width': max_width,
                     'initial_indent': ' ' * indent_width,
-                    'subsequent_indent': ' ' * indent_width
+                    'subsequent_indent': ' ' * indent_width,
+                    'expand_tabs': True,
                 }
 
-                for line in textwrap.wrap(self.description, **wrap_options):
-                    yield line
+                for desc_line in self.description.splitlines():
+                    if desc_line == '':
+                        yield desc_line
+                    else:
+                        for line in textwrap.wrap(desc_line, **wrap_options):
+                            yield line
             else:
-                yield self.description
+                for desc_line in self.description.splitlines():
+                    yield desc_line

@@ -1,3 +1,4 @@
+import textwrap
 from typing import Any, Callable, Iterable, List, Optional, Type
 from .utils import dict_get_lazy
 from .call_match import CallMatch, CallMatchFail
@@ -82,7 +83,8 @@ class CommandDispatcher:
 
             # Read docstring if 'description' parameter is not given
             if 'description' not in kwargs and f.__doc__ is not None:
-                kwargs['description'] = f.__doc__
+                # Dedent and remove leading and trailing empty lines
+                kwargs['description'] = textwrap.dedent(f.__doc__).strip('\n')
 
             cmd = command_class(st_root, f, **kwargs)
             self.register(cmd)
