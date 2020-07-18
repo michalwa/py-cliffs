@@ -28,6 +28,8 @@ class SyntaxLexer:
                 if current != '':
                     yield Token('symbol', current.flush(), current_start, i)
 
+            # TODO: Unify the single-char tokens below as they can be identified by the character itself
+
             # Delimiters
             elif c in '<:>|()[]{}':
                 if current != '':
@@ -39,6 +41,12 @@ class SyntaxLexer:
                 if current != '':
                     yield Token('symbol', current.flush(), current_start, i)
                 yield Token('asterisk', c, i, i + 1)
+
+            # Hat/caret
+            elif c == '^':
+                if current != '':
+                    yield Token('symbol', current.flush(), current_start, i)
+                yield Token('hat', c, i, i + 1)
 
             # Accumulate symbols
             else:

@@ -15,18 +15,10 @@ class CallMatcher:
     manages registered parameter types.
     """
 
-    def __init__(self, case_sensitive: bool = True):
-        """Initializes a matcher.
-
-        Parameters
-        ----------
-          * case_sensitive: `bool` (optional) - Whether to use case-sensitive
-            comparison when matching literals. Defaults to True.
-        """
+    def __init__(self):
+        """Initializes a matcher"""
 
         self._types = {}  # type: Dict[str, Callable[[str], Any]]
-
-        self.case_sensitive = case_sensitive
 
         self.register_type(str)
         self.register_type(int)
@@ -66,24 +58,6 @@ class CallMatcher:
         if name not in self._types:
             raise SyntaxError(f"Undefined type '{name}'")
         return self._types[name]
-
-    def match_literal(self, expected: str, actual: str) -> bool:
-        """Matches a literal token.
-
-        Parameters
-        ----------
-          * expected: `str` - The expected literal.
-          * actual: `str` - The actual token to compare against the literal.
-
-        Returns
-        -------
-          * `bool`: Whether the token matches the literal.
-        """
-
-        if self.case_sensitive:
-            return expected == actual
-        else:
-            return expected.lower() == actual.lower()
 
 
 class CallMatch:

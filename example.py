@@ -99,7 +99,7 @@ def command_repeat(n: int, what: str):
 
 
 # There will be an info message logged that this command can be simplified
-@cli.command('exit|(quit|(bye|(leave)))')
+@cli.command('exit|(quit|(bye|(leave)))', parser={'all_case_insensitive': True})
 def command_exit():
     print("Bye!")
     exit(0)
@@ -111,7 +111,7 @@ def command_exit():
 #
 # The description will be read from the the docstring unless the description parameter
 # is present.
-@cli.command('help', matcher=CallMatcher(case_sensitive=False))
+@cli.command('help^')
 def command_help():
     """Displays this help message"""
 

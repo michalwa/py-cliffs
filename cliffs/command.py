@@ -1,6 +1,6 @@
 from typing import Optional, Callable, Iterable
 from inspect import signature
-from .utils import dict_get_lazy
+from .utils import dict_get_lazy, instance_or_kwargs
 from .syntax_tree import Node as SyntaxNode
 from .call_lexer import CallLexer
 from .call_match import CallMatcher, CallMatch, CallMatchFail
@@ -28,8 +28,13 @@ class Command:
 
         self.syntax = syntax
         self.callback = callback
-        self.lexer = dict_get_lazy(kwargs, 'lexer', CallLexer)  # type: CallLexer
-        self.matcher = dict_get_lazy(kwargs, 'matcher', CallMatcher)  # type: CallMatcher
+
+        lexer = dict_get_lazy(kwargs, 'lexer', CallLexer)
+        self.lexer = instance_or_kwargs(lexer, CallLexer)
+
+        matcher = dict_get_lazy(kwargs, 'matcher', CallMatcher)
+        self.matcher = instance_or_kwargs(matcher, CallMatcher)
+
         self.description = kwargs.get('description', None)  # type: Optional[str]
         self.hidden = kwargs.get('hidden', False)
 

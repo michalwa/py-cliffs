@@ -34,6 +34,9 @@ class SymbolList:
         return symbol
 
 
+# TODO: Encapsulate the syntax lexer in the syntax parser?
+# It's not going to be used separately anyways.
+
 class SyntaxParser:
     """Parses syntax specification strings into syntax trees which serve the
     function of recursive parsers for command calls."""
@@ -43,22 +46,25 @@ class SyntaxParser:
 
         Keyword arguments
         -----------------
-          * flatten_mode: `str`:
-            - 'off': Parsed trees will not be flattened.
-            - 'warn' (default): Parsed trees will be flattened and compared against non-flattened trees,
-                which will be returned. Any possible simplification will be logged to
-                `cliffs.syntax_parser` as an info message.
-            - 'on': Parsed trees will be flattened. Any applied simplification
+          * simplify: `str`:
+            - 'no': Parsed trees will not be simplified nor reported.
+            - 'warn' (default): Parsed trees will be simplified and compared against non-simplified trees,
+                which will be returned. Any possible simplification will be logged to the
+                `cliffs.syntax_parser` logger as an info message.
+            - 'yes': Parsed trees will be simplified. Any applied simplification
                 will be logged to `cliffs.syntax_parser` as an info message.
+            - 'silently': Parsed trees will be simplified without being reported.
 
           * symbol_list_class: `Type[SymbolList]` - The symbol list class to use when parsing.
             Defaults to SymbolList.
+          * all_case_insensitive: `bool` - Whether to parse literals as case-insensitive by default.
         """
 
-        self.flatten_mode = kwargs['flatten_mode'] if 'flatten_mode' in kwargs\
-            and kwargs['flatten_mode'] in ('off', 'warn', 'on') else 'warn'
+        self.simplify = kwargs['simplify_mode'] if 'simplify_mode' in kwargs\
+            and kwargs['simplify_mode'] in ('no', 'warn', 'yes', 'silently') else 'warn'
 
         self.symbol_list_class = kwargs.get('symbol_list_class', SymbolList)  # type: Type[SymbolList]
+        self.all_case_insensitive = kwargs.get('all_case_insensitive', False)  # type: bool
 
     def parse(self, tokens: Iterable[Token]) -> Node:
         """Parses the given sequence of tokens into a syntax tree.
@@ -84,6 +90,7 @@ class SyntaxParser:
         state = 'NORMAL'
         param_name = None
         param_type = None
+        after_hat = False
 
         for token in tokens:
 
@@ -122,6 +129,9 @@ class SyntaxParser:
                 else:
                     current.append_child(Literal(token.value))
 
+                    if self.all_case_insensitive:
+                        current.last_child.case_sensitive = False
+
             # Tail ellipsis
             elif token.typ == 'ellipsis':
                 if state != 'AFTER_PARAM_NAME' or param_name is None:
@@ -130,12 +140,21 @@ class SyntaxParser:
                 current.append_child(Tail(param_name))
                 state = 'AFTER_TAIL'
 
+            # Raw tail asterisk
             elif token.typ == 'asterisk':
                 if state != 'AFTER_TAIL':
                     raise SyntaxError(f"Unexpected {token}")
 
                 current.last_child.raw = True
                 state = 'AFTER_TAIL_RAW'
+
+            # Case-insensitive hat/caret
+            elif token.typ == 'hat':
+                if state != 'NORMAL' or after_hat or type(current.last_child) is not Literal:
+                    raise SyntaxError(f"Unexpected {token}")
+
+                current.last_child.case_sensitive = False
+                after_hat = True
 
             elif token.typ == 'delimeter':
 
@@ -156,8 +175,9 @@ class SyntaxParser:
                         if isinstance(current.last_child, Identifiable):
                             state = 'BEFORE_IDENTIFIER'
                         else:
-                            raise SyntaxError(f"Unexpected {token}: Cannot assign identifier \
-to {current.last_child.node_name}")
+                            raise SyntaxError(
+                                f"Unexpected {token}: Cannot assign identifier "
+                                f"to {current.last_child.node_name}")
 
                     else:
                         raise SyntaxError(f"Unexpected {token}")
@@ -198,8 +218,9 @@ to {current.last_child.node_name}")
 
                     else:
                         if not isinstance(current, (Sequence, OptionalSequence)):
-                            raise SyntaxError(f"Unexpected {token}: Cannot define variants \
-in {current.node_name}, maybe use parentheses?")
+                            raise SyntaxError(
+                                f"Unexpected {token}: Cannot define variants "
+                                f"in {current.node_name}, maybe use parentheses?")
 
                         # Convert the current node into a variant
                         variant = Variant()
@@ -315,6 +336,8 @@ in {current.node_name}, maybe use parentheses?")
                 else:
                     raise SyntaxError(f"Unknown token: {token}")
 
+            after_hat = False
+
         # Leave unterminated variant
         if isinstance(current, Variant):
             current = current.parent.parent
@@ -328,7 +351,7 @@ in {current.node_name}, maybe use parentheses?")
             raise SyntaxError(f'Unterminated expression: {path}')
 
         # Finalize
-        if self.flatten_mode == 'off':
+        if self.simplify == 'no':
             return root
 
         else:
@@ -340,19 +363,22 @@ in {current.node_name}, maybe use parentheses?")
             # Flatten recursively
             flat_root = root.flattened()
 
-            if self.flatten_mode == 'warn':
+            if self.simplify == 'warn':
                 if root != flat_root:
                     logging.getLogger('cliffs.syntax_parser').info(
                         'Syntax "%s" can be simplified to "%s"', root, flat_root)
 
                 return root
 
-            elif self.flatten_mode == 'on':
+            elif self.simplify == 'yes':
                 if root != flat_root:
                     logging.getLogger('cliffs.syntax_parser').info(
                         'Syntax "%s" simplified to "%s"', root, flat_root)
 
                 return flat_root
 
+            elif self.simplify == 'silently':
+                return flat_root
+
             else:
-                raise ValueError(f"Unknown flatten_mode: {self.flatten_mode}")
+                raise ValueError(f"Unknown simplify mode: {self.simplify}")

@@ -12,6 +12,7 @@ class Literal(Leaf):
 
     node_name = 'literal'
     _init_attrs = ['value']
+    _copy_attrs = ['case_sensitive']
 
     def __init__(self, value: str):
         """Initializes a literal node.
@@ -23,6 +24,7 @@ class Literal(Leaf):
 
         super().__init__()
         self.value = value
+        self.case_sensitive = True
 
     def __str__(self) -> str:
         return self.value
@@ -33,8 +35,16 @@ class Literal(Leaf):
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) < 1:
             raise CallMatchFail(f"Expected literal '{self.value}'")
-        if not matcher.match_literal(self.value, tokens[0].value):
+        if not self.match(tokens[0].value):
             raise CallMatchFail(f"Expected literal '{self.value}', got {tokens[0]}")
 
         match.score += 1
         return tokens[1:]
+
+    def match(self, string: str) -> bool:
+        """Checks if the given string matches this literal."""
+
+        if self.case_sensitive:
+            return self.value == string
+        else:
+            return self.value.lower() == string.lower()

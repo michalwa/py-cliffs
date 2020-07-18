@@ -1,7 +1,6 @@
-import textwrap
 import inspect
 from typing import Any, Callable, Iterable, List, Optional, Type
-from .utils import dict_get_lazy
+from .utils import dict_get_lazy, instance_or_kwargs
 from .call_match import CallMatch, CallMatchFail
 from .command import Command
 from .syntax_lexer import SyntaxLexer
@@ -26,16 +25,21 @@ class CommandDispatcher:
 
         Keyword arguments
         -----------------
-          * lexer: `SyntaxLexer` - The lexer to use to tokenize syntax strings for new commands.
-          * parser: `SyntaxParser` - The syntax parser to use to parse the syntax for new commands.
+          * lexer: `SyntaxLexer` or `dict` - The lexer to use to tokenize syntax strings for new commands.
+          * parser: `SyntaxParser` or `dict` - The syntax parser to use to parse the syntax for new commands.
+          * call_lexer: `CallLexer` or `dict` - The lexer to pass to new commands for tokenizing calls.
+          * matcher: `CallMatcher` or `dict` - The matcher to pass to new commands for matching calls.
           * command_class: `Type[Command]` - The class to construct for new commands.
-          * call_lexer: `CallLexer` - The lexer to pass to new commands for tokenizing calls.
-          * matcher: `CallMatcher` - The matcher to pass to new commands for matching calls.
         """
 
         self._commands = []  # type: List[Command]
-        self.lexer = dict_get_lazy(kwargs, 'lexer', SyntaxLexer)  # type: SyntaxLexer
-        self.parser = dict_get_lazy(kwargs, 'parser', SyntaxParser)  # type: SyntaxParser
+
+        lexer = dict_get_lazy(kwargs, 'lexer', SyntaxLexer)
+        self.lexer = instance_or_kwargs(lexer, SyntaxLexer)
+
+        parser = dict_get_lazy(kwargs, 'parser', SyntaxParser)
+        self.parser = instance_or_kwargs(parser, SyntaxParser)
+
         self.command_class = kwargs.get('command_class', Command)  # type: Type[Command]
 
         self._command_kwargs = {}
@@ -74,7 +78,10 @@ class CommandDispatcher:
           * `Command`: The constructed, registered command.
         """
 
-        st_root = self.parser.parse(self.lexer.tokenize(syntax))
+        parser = instance_or_kwargs(kwargs.get('parser', self.parser), SyntaxParser)
+        lexer = instance_or_kwargs(kwargs.get('lexer', self.lexer), SyntaxLexer)
+
+        st_root = parser.parse(lexer.tokenize(syntax))
         command_class = kwargs.pop('command_class', self.command_class)  # type: Type[Command]
 
         def decorator(f: Callable) -> Command:

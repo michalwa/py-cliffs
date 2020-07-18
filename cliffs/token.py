@@ -16,6 +16,8 @@ class Token:
           * value: `*` - A custom value to attach to this token.
         """
 
+        # TODO: The `typ` attribute can have the full name, it won't cause any issues
+
         self.typ = typ
         self.value = value or raw
         self.raw = raw

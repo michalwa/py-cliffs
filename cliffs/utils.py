@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Callable
+from typing import TypeVar, Type, Optional, Dict, Callable
 
 
 class StrBuffer:
@@ -89,3 +89,34 @@ def loose_bool(s: str) -> bool:
 
 def dict_get_lazy(dict: Dict, key, fn_default: Callable):
     return dict[key] if key in dict else fn_default()
+
+
+_T = TypeVar('_T')
+
+
+def instance_or_kwargs(obj, cls: Type[_T]) -> _T:
+    """Returns the object unchanged if it's an instance of the given class.
+    Otherwise, if it is a dictionary, an instance of the given class is constructed
+    with the object as keyword args to the constructor.
+
+    Parameters
+    ----------
+      * obj - The object to cast.
+      * cls: `Type[_T]` - The class to cast to.
+
+    Returns
+    -------
+      * `_T`: The instance of the given class.
+
+    Raises
+    ------
+      * `TypeError` when the object is neither an instance of the given class
+        nor a dictionary.
+    """
+
+    if isinstance(obj, cls):
+        return obj
+    elif type(obj) is dict:
+        return cls(**obj)
+    else:
+        raise TypeError(f"{obj} is neither an instance of {cls} nor a dictionary")
