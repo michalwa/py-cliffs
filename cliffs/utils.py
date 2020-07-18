@@ -8,6 +8,23 @@ class StrBuffer:
     def __init__(self):
         self._buffer = ''
 
+    def __iadd__(self, seq: str) -> 'StrBuffer':
+        self._buffer += seq
+        return self
+
+    def __str__(self) -> str:
+        return self._buffer
+
+    def __eq__(self, other) -> bool:
+        return any([
+            self is other,
+            self._buffer == other,
+            isinstance(other, self.__class__) and self._buffer == other._buffer
+        ])
+
+    def __len__(self) -> int:
+        return len(self._buffer)
+
     def flush(self) -> str:
         """Empties the buffer and returns its current contents.
 
@@ -34,20 +51,6 @@ class StrBuffer:
             self._buffer = self._buffer[start:]
         else:
             self._buffer = self._buffer[start:end]
-
-    def __iadd__(self, seq: str) -> 'StrBuffer':
-        self._buffer += seq
-        return self
-
-    def __str__(self) -> str:
-        return self._buffer
-
-    def __eq__(self, other) -> bool:
-        return any([
-            self is other,
-            self._buffer == other,
-            isinstance(other, self.__class__) and self._buffer == other._buffer
-        ])
 
 
 def loose_bool(s: str) -> bool:

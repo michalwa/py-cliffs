@@ -1,19 +1,19 @@
-from typing import Any, Optional
+from typing import Optional
 
 
 class Token:
     """An atomic piece of information in a string of code."""
 
-    def __init__(self, typ: Optional[str], raw: str, start: int, end: int, *, value: Any = None):
+    def __init__(self, typ: Optional[str], raw: str, start: int, end: int, *, value = None):
         """Initializes a generic token
 
         Parameters
         ----------
           * typ: `str` - A value indicating the type of the token.
-          * value: `*` - The raw contents of the substring used to construct this token.
+          * value - The raw contents of the substring used to construct this token.
           * start: `int` - The starting index (inclusive) of the substring used to construct this token.
           * len: `int` - The end index (exclusive) of the substring used to construct this token.
-          * value: `*` - A custom value to attach to this token.
+          * value - A custom value to attach to this token.
         """
 
         self.type = typ

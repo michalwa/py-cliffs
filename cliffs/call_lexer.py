@@ -41,11 +41,10 @@ class CallLexer:
 
         for i, c in enumerate(cmd):
             if c.isspace():
-                if current != '':
-                    if delim:
-                        current += c
-                    else:
-                        yield Token(None, current.flush(), current_start, i)
+                if delim:
+                    current += c
+                elif current != '':
+                    yield Token(None, current.flush(), current_start, i)
 
             elif c == '\\':
                 if escape:
@@ -61,7 +60,7 @@ class CallLexer:
                     delim = c
                     current_start = i
                 elif c == delim:
-                    yield Token(None, current.flush(), current_start, i + 1)
+                    yield Token(None, cmd[current_start:i + 1], current_start, i + 1, value=current.flush())
                     delim = None
                 else:
                     current += c
@@ -83,8 +82,28 @@ class CallLexer:
 
             # Unterminated quoted argument
             if delim is not None:
-                yield Token(None, delim + current.flush(), current_start, i + 1)
+                rstripped = str(current).rstrip()
+
+                if rstripped != '':
+                    num_rstripped_chars = len(current) - len(rstripped)
+
+                    # If there is whitespace separating the delimiter and the token,
+                    # treat the two as separate tokens
+                    if rstripped[0].isspace():
+                        yield Token(None, delim, current_start, current_start + 1)
+
+                        lstripped = rstripped[1:].lstrip()
+                        num_lstripped_chars = len(rstripped) - len(lstripped)
+
+                        yield Token(None, lstripped, current_start + 1 + num_lstripped_chars, i + 1 - num_rstripped_chars)
+
+                    else:
+                        yield Token(None, delim + rstripped, current_start, i + 1 - num_rstripped_chars)
 
             # Unterminated plain argument
             else:
                 yield Token(None, current.flush(), current_start, i + 1)
+
+        # Unterminated delimiter
+        if delim is not None:
+            yield Token(None, delim, current_start, current_start + 1)
