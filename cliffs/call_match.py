@@ -30,7 +30,7 @@ class CallMatcher:
 
         Parameters
         ----------
-          * constructor: `(str) -> Any` - The constructor of the type from string.
+          * constructor: `str -> *` - The constructor of the type from string.
           * name: `str` (optional) - The name of the type. Defaults to
             the `__name__` of the constructor.
         """
@@ -48,7 +48,7 @@ class CallMatcher:
 
         Returns
         -------
-          * `(str) -> *`: The constructor.
+          * `str -> *`: The constructor.
 
         Raises
         ------

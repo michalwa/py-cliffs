@@ -107,7 +107,7 @@ class CommandDispatcher:
 
         Returns
         -------
-          * `*`: Whatever the callback of the matched command returns.
+          * Whatever the callback of the matched command returns.
 
         Raises
         ------

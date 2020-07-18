@@ -52,12 +52,12 @@ def command_set_alarm(match: CallMatch):
     print(t)
 
 
-# Tail parameters (`...`) collect all remaining tokens from the command call.
-# Nothing can follow such parameters, anything after it will cause a `SyntaxError`.
-#
 # You can pass parameters directly as arguments to a callback.
-@cli.command('(eval | =) <expr...*>', description='Evaluates a given expression.')
+# This is actually the preferred way of setting up commands, the above example
+# was just for demonstration purposes.
+@cli.command('(eval | =) <expr...*>')
 def command_eval(expr: str):
+    """Evaluates a given expression."""
 
     # Command callbacks can return values which will be passed to the caller of `dispatch()`
     return eval(expr)
@@ -77,19 +77,17 @@ def command_like_bread(negation: bool, food: int):
         print(f"I don't like {food_name} either")
 
 
-# Unordered groups match elements in arbitrary order (they must still match all of them)
-#
 # Command callbacks can also recieve additional arguments from the caller of `dispatch()`
-@cli.command('{tell time}', description='Tells the date and time')
+@cli.command('{tell time}')
 def command_tell_time(now: datetime):
+    """Tells date and time"""
+
     print(f"The time is {now}")
 
 
 # Commands don't have to start with a literal.
-#
 # Keep in mind though that when matching fails, the most likely command will be guessed
 # based on the beginning portion of the match.
-#
 # For example, when calling: `6 alarm at`, even though more tokens match the
 # "set alarm at ..." command, the command below will be reported as missing arguments.
 @cli.command('<n:int> times say <what>', hidden=True)
@@ -105,12 +103,6 @@ def command_exit():
     exit(0)
 
 
-# All callback parameters are optional and indicate what the callback needs to recieve.
-#
-# You can override the matcher (and lexer) for every command.
-#
-# The description will be read from the the docstring unless the description parameter
-# is present.
 @cli.command('help^')
 def command_help():
     """Displays this help message"""

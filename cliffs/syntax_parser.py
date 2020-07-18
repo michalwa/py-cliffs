@@ -224,7 +224,7 @@ class SyntaxParser:
                         if not isinstance(current, (Sequence, OptionalSequence)):
                             raise SyntaxError(
                                 f"Unexpected {token}: Cannot define variants "
-                                f"in {current.node_name}, maybe use parentheses?")
+                                f"in {current.node_name}, maybe you meant to use parentheses?")
 
                         # Convert the current node into a variant
                         variant = Variant()

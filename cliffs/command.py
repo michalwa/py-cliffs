@@ -71,7 +71,7 @@ class Command:
 
         Returns
         -------
-          * `*`: Whatever is returned by the callback.
+          * Whatever is returned by the callback.
         """
 
         # Pass only those args that are required by the callback signature

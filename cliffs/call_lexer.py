@@ -95,10 +95,14 @@ class CallLexer:
                         lstripped = rstripped[1:].lstrip()
                         num_lstripped_chars = len(rstripped) - len(lstripped)
 
-                        yield Token(None, lstripped, current_start + 1 + num_lstripped_chars, i + 1 - num_rstripped_chars)
+                        yield Token(None, lstripped,
+                                    current_start + 1 + num_lstripped_chars,
+                                    i + 1 - num_rstripped_chars)
 
                     else:
-                        yield Token(None, delim + rstripped, current_start, i + 1 - num_rstripped_chars)
+                        yield Token(None, delim + rstripped,
+                                    current_start,
+                                    i + 1 - num_rstripped_chars)
 
             # Unterminated plain argument
             else:
