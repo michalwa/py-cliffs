@@ -45,7 +45,7 @@ class CallLexer:
                     if delim:
                         current += c
                     else:
-                        yield Token('plain', current.flush(), current_start, i)
+                        yield Token(None, current.flush(), current_start, i)
 
             elif c == '\\':
                 if escape:
@@ -61,7 +61,7 @@ class CallLexer:
                     delim = c
                     current_start = i
                 elif c == delim:
-                    yield Token('quoted', current.flush(), current_start, i + 1)
+                    yield Token(None, current.flush(), current_start, i + 1)
                     delim = None
                 else:
                     current += c
@@ -83,8 +83,8 @@ class CallLexer:
 
             # Unterminated quoted argument
             if delim is not None:
-                yield Token('plain', delim + current.flush(), current_start, i + 1)
+                yield Token(None, delim + current.flush(), current_start, i + 1)
 
             # Unterminated plain argument
             else:
-                yield Token('plain', current.flush(), current_start, i + 1)
+                yield Token(None, current.flush(), current_start, i + 1)

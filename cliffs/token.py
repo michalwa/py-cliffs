@@ -1,10 +1,10 @@
-from typing import Any
+from typing import Any, Optional
 
 
 class Token:
     """An atomic piece of information in a string of code."""
 
-    def __init__(self, typ: str, raw: str, start: int, end: int, *, value: Any = None):
+    def __init__(self, typ: Optional[str], raw: str, start: int, end: int, *, value: Any = None):
         """Initializes a generic token
 
         Parameters
@@ -16,16 +16,20 @@ class Token:
           * value: `*` - A custom value to attach to this token.
         """
 
-        # TODO: The `typ` attribute can have the full name, it won't cause any issues
-
-        self.typ = typ
+        self.type = typ
         self.value = value or raw
         self.raw = raw
         self.start = start
         self.end = end
 
     def __str__(self) -> str:
-        return f"{self.typ} {repr(self.value)} at {self.start}"
+        if self.type is not None:
+            return f"{self.type} {repr(self.value)} at {self.start}"
+        else:
+            return f"{repr(self.value)} at {self.start}"
 
     def __repr__(self) -> str:
-        return f"Token({self.typ}: {repr(self.value)} at {self.start}..{self.end})"
+        if self.type is not None:
+            return f"Token({self.type}: {repr(self.value)} at {self.start}..{self.end})"
+        else:
+            return f"Token({repr(self.value)} at {self.start}..{self.end})"

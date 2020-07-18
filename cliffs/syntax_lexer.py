@@ -28,26 +28,6 @@ class SyntaxLexer:
                 if current != '':
                     yield Token('symbol', current.flush(), current_start, i)
 
-            # TODO: Unify the single-char tokens below as they can be identified by the character itself
-
-            # Delimiters
-            elif c in '<:>|()[]{}':
-                if current != '':
-                    yield Token('symbol', current.flush(), current_start, i)
-                yield Token('delimeter', c, i, i + 1)
-
-            # Asterisk
-            elif c == '*':
-                if current != '':
-                    yield Token('symbol', current.flush(), current_start, i)
-                yield Token('asterisk', c, i, i + 1)
-
-            # Hat/caret
-            elif c == '^':
-                if current != '':
-                    yield Token('symbol', current.flush(), current_start, i)
-                yield Token('hat', c, i, i + 1)
-
             # Accumulate symbols
             else:
                 if current == '':
@@ -55,9 +35,10 @@ class SyntaxLexer:
 
                 current += c
 
-                # Yield off ellipses
-                if str(current).endswith('...'):
-                    current.trim(end=-3)
-                    if current != '':
-                        yield Token('symbol', current.flush(), current_start, i - 2)
-                    yield Token('ellipsis', '...', i - 2, i + 1)
+                # Trim off accumulated "static" (always having the same value) tokens
+                for static in list('<>()[]{}:|*^') + ['...']:
+                    if str(current).endswith(static):
+                        current.trim(end=-len(static))
+                        if current != '':
+                            yield Token('symbol', current.flush(), current_start, i - len(static) + 1)
+                        yield Token('static', static, i - len(static) + 1, i + 1)

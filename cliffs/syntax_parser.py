@@ -1,6 +1,4 @@
 import logging
-from typing import Type, Iterable
-from .token import Token
 from .syntax_lexer import SyntaxLexer
 from .syntax_tree import *
 from .utils import dict_get_lazy, instance_or_kwargs
@@ -101,7 +99,7 @@ class SyntaxParser:
         for token in tokens:
 
             # Symbols
-            if token.typ == 'symbol':
+            if token.type == 'symbol':
 
                 # Parameter names
                 if state == 'BEFORE_PARAM_NAME':
@@ -138,34 +136,34 @@ class SyntaxParser:
                     if self.all_case_insensitive:
                         current.last_child.case_sensitive = False
 
-            # Tail ellipsis
-            elif token.typ == 'ellipsis':
-                if state != 'AFTER_PARAM_NAME' or param_name is None:
-                    raise SyntaxError(f"Unexpected {token}")
+            elif token.type == 'static':
 
-                current.append_child(Tail(param_name))
-                state = 'AFTER_TAIL'
+                # Tail ellipsis
+                if token.value == '...':
+                    if state != 'AFTER_PARAM_NAME' or param_name is None:
+                        raise SyntaxError(f"Unexpected {token}")
 
-            # Raw tail asterisk
-            elif token.typ == 'asterisk':
-                if state != 'AFTER_TAIL':
-                    raise SyntaxError(f"Unexpected {token}")
+                    current.append_child(Tail(param_name))
+                    state = 'AFTER_TAIL'
 
-                current.last_child.raw = True
-                state = 'AFTER_TAIL_RAW'
+                # Raw tail asterisk
+                elif token.value == '*':
+                    if state != 'AFTER_TAIL':
+                        raise SyntaxError(f"Unexpected {token}")
 
-            # Case-insensitive hat/caret
-            elif token.typ == 'hat':
-                if state != 'NORMAL' or after_hat or type(current.last_child) is not Literal:
-                    raise SyntaxError(f"Unexpected {token}")
+                    current.last_child.raw = True
+                    state = 'AFTER_TAIL_RAW'
 
-                current.last_child.case_sensitive = False
-                after_hat = True
+                # Case-insensitive hat/caret
+                elif token.value == '^':
+                    if state != 'NORMAL' or after_hat or type(current.last_child) is not Literal:
+                        raise SyntaxError(f"Unexpected {token}")
 
-            elif token.typ == 'delimeter':
+                    current.last_child.case_sensitive = False
+                    after_hat = True
 
                 # Opening parameter delimiter
-                if token.value == '<':
+                elif token.value == '<':
                     if state != 'NORMAL':
                         raise SyntaxError(f"Unexpected {token}")
                     state = 'BEFORE_PARAM_NAME'
@@ -200,7 +198,7 @@ class SyntaxParser:
                         param_type = None
                         state = 'NORMAL'
 
-                    # Closing tail parameter delimiter
+                    # Closing tail delimiter
                     elif state in ['AFTER_TAIL', 'AFTER_TAIL_RAW']:
                         state = 'NORMAL'
 
