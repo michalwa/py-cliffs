@@ -1,7 +1,9 @@
 import logging
 from typing import Type, Iterable
 from .token import Token
+from .syntax_lexer import SyntaxLexer
 from .syntax_tree import *
+from .utils import dict_get_lazy, instance_or_kwargs
 
 
 class SymbolList:
@@ -34,9 +36,6 @@ class SymbolList:
         return symbol
 
 
-# TODO: Encapsulate the syntax lexer in the syntax parser?
-# It's not going to be used separately anyways.
-
 class SyntaxParser:
     """Parses syntax specification strings into syntax trees which serve the
     function of recursive parsers for command calls."""
@@ -46,6 +45,8 @@ class SyntaxParser:
 
         Keyword arguments
         -----------------
+          * lexer: `SyntaxLexer` or `dict` - The lexer to use to tokenize strings before parsing.
+
           * simplify: `str`:
             - 'no': Parsed trees will not be simplified nor reported.
             - 'warn' (default): Parsed trees will be simplified and compared against non-simplified trees,
@@ -63,15 +64,18 @@ class SyntaxParser:
         self.simplify = kwargs['simplify_mode'] if 'simplify_mode' in kwargs\
             and kwargs['simplify_mode'] in ('no', 'warn', 'yes', 'silently') else 'warn'
 
+        lexer = dict_get_lazy(kwargs, 'lexer', SyntaxLexer)
+        self.lexer = instance_or_kwargs(lexer, SyntaxLexer)
+
         self.symbol_list_class = kwargs.get('symbol_list_class', SymbolList)  # type: Type[SymbolList]
         self.all_case_insensitive = kwargs.get('all_case_insensitive', False)  # type: bool
 
-    def parse(self, tokens: Iterable[Token]) -> Node:
+    def parse(self, string: str) -> Node:
         """Parses the given sequence of tokens into a syntax tree.
 
         Parameters
         ----------
-          * tokens: `Iterable[Token]` - The tokens to parse.
+          * string: `str` - The string to parse.
 
         Returns
         -------
@@ -81,6 +85,8 @@ class SyntaxParser:
         ------
           * `SyntaxError` when there is an error in the specification.
         """
+
+        tokens = self.lexer.tokenize(string)
 
         root = Sequence()
         current = root  # type: Node

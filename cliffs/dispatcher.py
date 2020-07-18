@@ -25,7 +25,6 @@ class CommandDispatcher:
 
         Keyword arguments
         -----------------
-          * lexer: `SyntaxLexer` or `dict` - The lexer to use to tokenize syntax strings for new commands.
           * parser: `SyntaxParser` or `dict` - The syntax parser to use to parse the syntax for new commands.
           * call_lexer: `CallLexer` or `dict` - The lexer to pass to new commands for tokenizing calls.
           * matcher: `CallMatcher` or `dict` - The matcher to pass to new commands for matching calls.
@@ -33,9 +32,6 @@ class CommandDispatcher:
         """
 
         self._commands = []  # type: List[Command]
-
-        lexer = dict_get_lazy(kwargs, 'lexer', SyntaxLexer)
-        self.lexer = instance_or_kwargs(lexer, SyntaxLexer)
 
         parser = dict_get_lazy(kwargs, 'parser', SyntaxParser)
         self.parser = instance_or_kwargs(parser, SyntaxParser)
@@ -79,9 +75,8 @@ class CommandDispatcher:
         """
 
         parser = instance_or_kwargs(kwargs.get('parser', self.parser), SyntaxParser)
-        lexer = instance_or_kwargs(kwargs.get('lexer', self.lexer), SyntaxLexer)
 
-        st_root = parser.parse(lexer.tokenize(syntax))
+        st_root = parser.parse(syntax)
         command_class = kwargs.pop('command_class', self.command_class)  # type: Type[Command]
 
         def decorator(f: Callable) -> Command:
