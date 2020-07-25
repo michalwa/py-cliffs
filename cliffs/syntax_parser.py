@@ -159,6 +159,8 @@ class SyntaxParser:
                     if state != 'NORMAL' or after_hat or type(current.last_child) is not Literal:
                         raise SyntaxError(f"Unexpected {token}")
 
+                    # TODO: Allow suffixing groups with the hat and propagate case-sensitivity down to their children
+
                     current.last_child.case_sensitive = False
                     after_hat = True
 

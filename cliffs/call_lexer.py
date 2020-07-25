@@ -1,5 +1,4 @@
-from typing import Iterable, Optional
-from .utils import StrBuffer
+from typing import Iterable
 from .token import Token
 
 
@@ -11,16 +10,16 @@ class CallLexer:
     how they work in Python, with support for escapement).
     """
 
-    def __init__(self, delims: str = '"\''):
+    def __init__(self, quotes: str = '"\''):
         """Initializes a call lexer.
 
         Parameters
         ----------
-          * delims: `str` - The characters to use as compound token delimiters
+          * quotes: `str` - The characters to use as compound quoted token delimiters
             (used to include spaces in tokens). Defaults to `'` and `"`.
         """
 
-        self.delims = delims
+        self.quotes = quotes
 
     def tokenize(self, cmd: str) -> Iterable[Token]:
         """Splits the given command call string into tokens.
@@ -34,80 +33,76 @@ class CallLexer:
           * `Iterable[Token]`: The resulting tokens.
         """
 
-        current = StrBuffer()
+        current = ''
         current_start = 0
+        quote = None
         escape = False
-        delim = None  # type: Optional[str]
+
+        def plain_token(end: int):
+            return Token(None, current, current_start, end)
+
+        def quoted_token(end: int):
+            return Token(None, quote + current + quote, current_start, end, value=current)
 
         for i, c in enumerate(cmd):
-            if c.isspace():
-                if delim:
+
+            if c.isspace() and quote is None:
+                if current != '':
+                    yield plain_token(i)
+                current = ''
+                current_start = i + 1
+
+            elif c in self.quotes:
+
+                # Escaped quote
+                if escape:
+                    # Keep escape character if not inside a quoted token
+                    if quote is None:
+                        current += '\\'
                     current += c
-                elif current != '':
-                    yield Token(None, current.flush(), current_start, i)
+                    escape = False
+
+                # Begin quoted token
+                elif quote is None:
+                    if current != '':
+                        yield plain_token(i)
+                    current = ''
+                    current_start = i
+                    quote = c
+
+                # End quoted token
+                elif quote == c:
+                    yield quoted_token(i + 1)
+                    current = ''
+                    quote = None
 
             elif c == '\\':
-                if escape:
-                    current += c
-                escape = not escape
 
-            elif c in self.delims:
+                # Escaped backslash
                 if escape:
                     current += c
                     escape = False
 
-                elif delim is None:
-                    delim = c
-                    current_start = i
-                elif c == delim:
-                    yield Token(None, cmd[current_start:i + 1], current_start, i + 1, value=current.flush())
-                    delim = None
+                # Begin escape
                 else:
-                    current += c
+                    escape = True
 
             else:
+                # Backslash doesn't do anything if escaping an non-escapable character
                 if escape:
                     current += '\\'
                     escape = False
 
-                if current == '':
-                    if delim is not None:
-                        current_start = i - 1
-                    else:
-                        current_start = i
-
                 current += c
 
-        if current != '':
+        # Unterminated escape sequence
+        if escape:
+            current += '\\'
 
-            # Unterminated quoted argument
-            if delim is not None:
-                rstripped = str(current).rstrip()
+        # Unterminated quoted token
+        if quote is not None:
+            yield Token(None, quote + current, current_start, i + 1, value=quote + current)
 
-                if rstripped != '':
-                    num_rstripped_chars = len(current) - len(rstripped)
-
-                    # If there is whitespace separating the delimiter and the token,
-                    # treat the two as separate tokens
-                    if rstripped[0].isspace():
-                        yield Token(None, delim, current_start, current_start + 1)
-
-                        lstripped = rstripped[1:].lstrip()
-                        num_lstripped_chars = len(rstripped) - len(lstripped)
-
-                        yield Token(None, lstripped,
-                                    current_start + 1 + num_lstripped_chars,
-                                    i + 1 - num_rstripped_chars)
-
-                    else:
-                        yield Token(None, delim + rstripped,
-                                    current_start,
-                                    i + 1 - num_rstripped_chars)
-
-            # Unterminated plain argument
-            else:
-                yield Token(None, current.flush(), current_start, i + 1)
-
-        # Unterminated delimiter
-        if delim is not None:
-            yield Token(None, delim, current_start, current_start + 1)
+        # Leftover plain token
+        elif current != '':
+            yield plain_token(i + 1)
