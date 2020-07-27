@@ -63,7 +63,10 @@ class UnorderedGroup(Node):
             if best_fail is not None:
                 raise best_fail
             else:
-                raise CallMatchFail('Unmatched unordered group')
+                if tokens == []:
+                    raise CallMatchFail(f"Expected {self.expected_info()}")
+                else:
+                    raise CallMatchFail(f"Expected {self.expected_info()}, got {tokens[0]}")
 
     def expected_info(self) -> str:
         return 'one of: ' + ', '.join(set(child.expected_info() for child in self.children))

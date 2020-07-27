@@ -14,7 +14,6 @@ class Parameter(Leaf):
     """
 
     node_name = 'parameter'
-    _init_attrs = ['name', 'typename']
 
     def __init__(self, name: str, typename: Optional[str] = None):
         """Initializes a parameter node.

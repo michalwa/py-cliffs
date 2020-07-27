@@ -1,3 +1,4 @@
+import inspect
 from typing import List, Optional, Iterable
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher
@@ -8,17 +9,17 @@ class Node:
 
     node_name = 'node'
 
+    # TODO: Fix the messy copy/comparison framework that emerged from trying to
+    # solve the tree flattening algorithm
+
     # Attributes to exclude in equality comparison
     _eq_exclude = []  # type: List[str]
-
-    # Attributes to pass to __init__ when copying
-    _init_attrs = []  # type: List[str]
 
     # Attributes to include when copying
     _copy_attrs = ['parent']  # type: List[str]
 
     def __init__(self):
-        self._eq_exclude += ['_eq_exclude', '_init_attrs', '_copy_attrs', 'parent', 'children']
+        self._eq_exclude += ['_eq_exclude', '_copy_attrs', 'parent', 'children']
 
         self.parent = None  # type: Optional[Node]
         self.children = []  # type: List[Node]
@@ -93,15 +94,26 @@ class Node:
 
         yield self
         for child in self.children:
-            for leaf in child.iter_traverse():
-                yield leaf
+            for node in child.iter_traverse():
+                yield node
 
     def flattened(self) -> 'Node':
         """Recusively creates a flattened copy of this node with minimized number
         of levels of descendants.
         """
 
-        new = self.__class__(*(self.__getattribute__(k) for k in self._init_attrs))
+        # Find attributes that need to be passed to __init__
+        init_sig = inspect.signature(self.__class__.__init__)
+        args = []
+        kwargs = {}
+        for name, param in init_sig.parameters.items():
+            if name != 'self':
+                if param.kind == param.POSITIONAL_ONLY:
+                    args.append(self.__getattribute__(name))
+                elif param.kind in (param.POSITIONAL_OR_KEYWORD, param.KEYWORD_ONLY):
+                    kwargs[name] = self.__getattribute__(name)
+
+        new = self.__class__(*args, **kwargs)
         for k, v in self.__dict__.items():
             if k in self._copy_attrs:
                 new.__setattr__(k, v)
