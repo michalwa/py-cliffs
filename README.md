@@ -32,18 +32,25 @@ method calls for constructing command parsers, as it is usually done in librarie
 To demonstrate the concept of how **Clifford** works, consider this simple command syntax
 specification:
 
-    set [loud] alarm at <hour> [(am|pm)] [every <days>] [saying <message>]
+    set [loud] alarm at <hour> [am|pm] [every <days>] [saying <message>]
 
 Such defined syntax accepts the following command calls:
 
     set alarm at 9 am
-    set alarm at 9
-    set alarm at 11:05 pm
-    set loud alarm at 7:30 am every 'mon, tue, fri'
-    set loud alarm at 2 saying "It's me!"
-    set alarm at 2 am every monday saying 'Hello, world!'
+        opts = [False, True, False, False]
+        vars = [0]
+        params = {'hour': '9'}
 
-But will not accept the following:
+    set loud alarm at 7 every monday
+        opts = [True, False, True, False]
+        params = {'hour': 7, 'days': 'monday'}
+
+    set alarm at 2 pm every monday saying 'Hello, world!'
+        opts = [False, True, True, True]
+        vars = [1]
+        params = {'hour': 2, 'days': 'monday', 'message': 'Hello, world!'}
+
+And will reject the following:
 
     set alarm
     set loud alarm at
