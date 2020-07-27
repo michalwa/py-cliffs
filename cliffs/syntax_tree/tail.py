@@ -12,14 +12,13 @@ class Tail(Leaf):
     """
 
     node_name = 'tail'
-    _copy_attrs = ['raw']
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, *, raw: bool = False):
         super().__init__()
         self.name = name
 
         # Whether to capture untokenized plaintext under the tail parameter
-        self.raw = False
+        self.raw = raw
 
     def __eq__(self, other) -> bool:
         return isinstance(other, self.__class__) \

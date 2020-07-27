@@ -18,7 +18,7 @@ class UnorderedGroup(Node):
 
     def flattened(self) -> Node:
         if self.num_children == 1:
-            return self.last_child.flattened()
+            return self.nth_child(-1).flattened()
         else:
             return super().flattened()
 

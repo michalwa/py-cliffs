@@ -11,9 +11,8 @@ class Literal(Leaf):
     """
 
     node_name = 'literal'
-    _copy_attrs = ['case_sensitive']
 
-    def __init__(self, value: str):
+    def __init__(self, value: str, *, case_sensitive: bool = True):
         """Initializes a literal node.
 
         Parameters
@@ -23,7 +22,7 @@ class Literal(Leaf):
 
         super().__init__()
         self.value = value
-        self.case_sensitive = True
+        self.case_sensitive = case_sensitive
 
     def __eq__(self, other) -> bool:
         return isinstance(other, self.__class__) \

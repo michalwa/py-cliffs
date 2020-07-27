@@ -113,16 +113,16 @@ class SyntaxParser:
 
                 # Group identifiers
                 elif state == 'BEFORE_IDENTIFIER':
-                    group = current.last_child
+                    group = current.nth_child(-1)
 
                     # If assining identifier to a wrapper around a variant group, e.g. [a|b|c]:id
                     # The variant group should be identified instead of the parent group; as if it were [(a|b|c):id]
                     # unless the variant group had parentheses around it
-                    if group.num_children == 1 and isinstance(group.last_child, VariantGroup) and\
-                            not group.last_child.wrapped:
+                    if group.num_children == 1 and isinstance(group.nth_child(-1), VariantGroup) and\
+                            not group.nth_child(-1).wrapped:
 
-                        group.last_child.identifier = symbols.register(token.value)
-                        group.last_child.inherited_identifier = True
+                        group.nth_child(-1).identifier = symbols.register(token.value)
+                        group.nth_child(-1).inherited_identifier = True
 
                     else:
                         group.identifier = symbols.register(token.value)
@@ -134,7 +134,7 @@ class SyntaxParser:
                     current.append_child(Literal(token.value))
 
                     if self.all_case_insensitive:
-                        current.last_child.case_sensitive = False
+                        current.nth_child(-1).case_sensitive = False
 
             elif token.type == 'static':
 
@@ -151,17 +151,17 @@ class SyntaxParser:
                     if state != 'AFTER_TAIL':
                         raise SyntaxError(f"Unexpected {token}")
 
-                    current.last_child.raw = True
+                    current.nth_child(-1).raw = True
                     state = 'AFTER_TAIL_RAW'
 
                 # Case-insensitive hat/caret
                 elif token.value == '^':
-                    if state != 'NORMAL' or after_hat or type(current.last_child) is not Literal:
+                    if state != 'NORMAL' or after_hat or type(current.nth_child(-1)) is not Literal:
                         raise SyntaxError(f"Unexpected {token}")
 
                     # TODO: Allow suffixing groups with the hat and propagate case-sensitivity down to their children
 
-                    current.last_child.case_sensitive = False
+                    current.nth_child(-1).case_sensitive = False
                     after_hat = True
 
                 # Opening parameter delimiter
@@ -178,12 +178,12 @@ class SyntaxParser:
 
                     # Group identifier separator
                     elif state == 'NORMAL':
-                        if isinstance(current.last_child, Identifiable):
+                        if isinstance(current.nth_child(-1), Identifiable):
                             state = 'BEFORE_IDENTIFIER'
                         else:
                             raise SyntaxError(
                                 f"Unexpected {token}: Cannot assign identifier "
-                                f"to {current.last_child.node_name}")
+                                f"to {current.nth_child(-1).node_name}")
 
                     else:
                         raise SyntaxError(f"Unexpected {token}")
@@ -242,7 +242,7 @@ class SyntaxParser:
                             # If this is the root node or something other than a plain sequence,
                             # replace the entire sequence with the variant group
                             current = current.parent
-                            current.remove_child(current.last_child)
+                            current.remove_child(current.nth_child(-1))
                             current.append_child(group)
                         else:
                             # Replace all children of the current node with the variant group
@@ -363,7 +363,7 @@ class SyntaxParser:
         else:
             # Manually flatten root sequence
             if root.num_children == 1:
-                root = root.last_child
+                root = root.nth_child(-1)
                 root.parent.remove_child(root)
 
             # Flatten recursively

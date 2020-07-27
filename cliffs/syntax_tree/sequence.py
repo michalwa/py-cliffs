@@ -19,7 +19,7 @@ class Sequence(Node):
 
     def flattened(self) -> str:
         if self.num_children == 1:
-            return self.last_child.flattened()
+            return self.nth_child(-1).flattened()
         else:
             # Unpack nested sequences
             flat = super().flattened()
@@ -37,4 +37,4 @@ class Sequence(Node):
         return tokens
 
     def expected_info(self) -> str:
-        return self.first_child.expected_info()
+        return self.nth_child(0).expected_info()

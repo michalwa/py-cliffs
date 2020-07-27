@@ -15,7 +15,6 @@ class VariantGroup(Identifiable, Node):
     """
 
     node_name = 'variant_group'
-    _copy_attrs = ['parent', 'inherited_identifier']
 
     def __init__(self):
         super().__init__()
@@ -42,9 +41,10 @@ class VariantGroup(Identifiable, Node):
 
     def flattened(self) -> Node:
         if self.num_children == 1:
-            return self.last_child.flattened_sequence()
+            return self.nth_child(-1).flattened_sequence()
         else:
             flat = super().flattened()
+            flat.inherited_identifier = self.inherited_identifier
 
             # Decide whether the variant group should have parentheses around it:
             #
@@ -55,12 +55,12 @@ class VariantGroup(Identifiable, Node):
 
             # Unpack nested variant groups
             for variant in list(flat.children):
-                if variant.num_children == 1 and isinstance(variant.last_child, VariantGroup)\
-                        and not variant.last_child.wrapped:
+                if variant.num_children == 1 and isinstance(variant.nth_child(-1), VariantGroup)\
+                        and not variant.nth_child(-1).wrapped:
 
                     i = flat.child_index(variant)
                     flat.remove_child(variant)
-                    for subvariant in variant.last_child.children:
+                    for subvariant in variant.nth_child(-1).children:
                         flat.insert_child(i, subvariant)
                         i += 1
 

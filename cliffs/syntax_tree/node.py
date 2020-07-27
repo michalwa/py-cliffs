@@ -9,12 +9,6 @@ class Node:
 
     node_name = 'node'
 
-    # TODO: Fix the messy copy/comparison framework that emerged from trying to
-    # solve the tree flattening algorithm
-
-    # Attributes to include when copying
-    _copy_attrs = ['parent']  # type: List[str]
-
     def __init__(self):
         self.parent = None  # type: Optional[Node]
         self.children = []  # type: List[Node]
@@ -37,15 +31,11 @@ class Node:
 
         return other in self.children or any(other in child for child in self.children)
 
-    # TODO: Combine into nth_child
-
-    @property
-    def first_child(self) -> Optional['Node']:
-        return self.children[0] if self.children != [] else None
-
-    @property
-    def last_child(self) -> Optional['Node']:
-        return self.children[-1] if self.children != [] else None
+    def nth_child(self, n: int) -> Optional['Node']:
+        try:
+            return self.children[n]
+        except IndexError:
+            return None
 
     @property
     def num_children(self) -> int:
@@ -99,9 +89,6 @@ class Node:
                     kwargs[name] = self.__getattribute__(name)
 
         new = self.__class__(*args, **kwargs)
-        for k, v in self.__dict__.items():
-            if k in self._copy_attrs:
-                new.__setattr__(k, v)
 
         for child in self.children:
             new.append_child(child.flattened())
