@@ -119,7 +119,7 @@ class SyntaxParser:
                     # The variant group should be identified instead of the parent group; as if it were [(a|b|c):id]
                     # unless the variant group had parentheses around it
                     if group.num_children == 1 and isinstance(group.nth_child(-1), VariantGroup) and\
-                            not group.nth_child(-1).wrapped:
+                            not group.nth_child(-1).parentheses:
 
                         group.nth_child(-1).identifier = symbols.register(token.value)
                         group.nth_child(-1).inherited_identifier = True
@@ -246,7 +246,7 @@ class SyntaxParser:
                             current.append_child(group)
                         else:
                             # Replace all children of the current node with the variant group
-                            group.wrapped = False
+                            group.parentheses = False
                             current.append_child(group)
 
                         # Construct a new variant and make it the current scope
@@ -277,7 +277,7 @@ class SyntaxParser:
                         current = current.parent
 
                     else:
-                        if not current.parent.wrapped:
+                        if not current.parent.parentheses:
                             raise SyntaxError(f"Unexpected {token}")
                         if current.num_children == 0:
                             raise SyntaxError(f"Unexpected {token}: Empty variant")
@@ -308,7 +308,7 @@ class SyntaxParser:
 
                     else:
                         if any([
-                            current.parent.wrapped,
+                            current.parent.parentheses,
                             not isinstance(current.parent.parent, OptionalSequence)
                         ]):
                             raise SyntaxError(f"Unexpected {token}")

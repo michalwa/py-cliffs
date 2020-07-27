@@ -20,10 +20,15 @@ class VariantGroup(Identifiable, Node):
         super().__init__()
 
         # Whether this variant group must be wrapped in parentheses
-        self.wrapped = True
+        self.parentheses = True
 
         # Whether the identifier for this group was inherited from the parent node
         self.inherited_identifier = False
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+            and self.parentheses == other.parentheses \
+            and self.children == other.children
 
     def append_child(self, child: Node) -> Node:
         if not isinstance(child, Variant):
@@ -37,11 +42,11 @@ class VariantGroup(Identifiable, Node):
 
     def __str__(self) -> str:
         children = '|'.join(str(child) for child in self.children)
-        return f'({children})' if self.wrapped else children
+        return f'({children})' if self.parentheses else children
 
     def flattened(self) -> Node:
         if self.num_children == 1:
-            return self.nth_child(-1).flattened_sequence()
+            return self.nth_child(0).flattened()
         else:
             flat = super().flattened()
             flat.inherited_identifier = self.inherited_identifier
@@ -50,13 +55,13 @@ class VariantGroup(Identifiable, Node):
             #
             # Wrap in parentheses if there is a parent and this group isn't its only child
             # or if this group has an identifier assigned that is not inherited from its parent
-            flat.wrapped = flat.parent is not None and flat.parent.num_children != 1\
+            flat.parentheses = self.parent is not None and self.parent.num_children != 1\
                 or flat.identifier is not None and not flat.inherited_identifier
 
             # Unpack nested variant groups
             for variant in list(flat.children):
                 if variant.num_children == 1 and isinstance(variant.nth_child(-1), VariantGroup)\
-                        and not variant.nth_child(-1).wrapped:
+                        and not variant.nth_child(-1).parentheses:
 
                     i = flat.child_index(variant)
                     flat.remove_child(variant)
@@ -102,7 +107,8 @@ class VariantGroup(Identifiable, Node):
 
         # If the best fail exists, raise it
         elif fails != []:
-            best_fail, _ = best(fails, lambda f: f[1])
+            best_fail, best_score = best(fails, lambda f: f[1])
+            match.score += best_score
             raise best_fail
 
         # Raise the default fail otherwise
@@ -124,8 +130,12 @@ class Variant(Sequence):
     def __str__(self):
         return ' '.join(str(child) for child in self.children)
 
-    def flattened(self):
-        return Node.flattened(self)
+    def flattened(self) -> Node:
+        if self.num_children == 1 and isinstance(self.nth_child(0), Sequence):
+            new = Variant()
+            for child in self.nth_child(0).children:
+                new.append_child(child)
 
-    def flattened_sequence(self) -> Sequence:
-        return Sequence.flattened(self)
+            return new
+
+        return self

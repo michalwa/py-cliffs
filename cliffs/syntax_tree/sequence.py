@@ -19,7 +19,7 @@ class Sequence(Node):
 
     def flattened(self) -> str:
         if self.num_children == 1:
-            return self.nth_child(-1).flattened()
+            return self.nth_child(0).flattened()
         else:
             # Unpack nested sequences
             flat = super().flattened()
@@ -29,6 +29,7 @@ class Sequence(Node):
                     new.children += child.children
                 else:
                     new.children.append(child)
+
             return new
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
