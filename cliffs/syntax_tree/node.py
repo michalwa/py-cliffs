@@ -12,15 +12,10 @@ class Node:
     # TODO: Fix the messy copy/comparison framework that emerged from trying to
     # solve the tree flattening algorithm
 
-    # Attributes to exclude in equality comparison
-    _eq_exclude = []  # type: List[str]
-
     # Attributes to include when copying
     _copy_attrs = ['parent']  # type: List[str]
 
     def __init__(self):
-        self._eq_exclude += ['_eq_exclude', '_copy_attrs', 'parent', 'children']
-
         self.parent = None  # type: Optional[Node]
         self.children = []  # type: List[Node]
 
@@ -30,21 +25,9 @@ class Node:
             r += '[' + ', '.join(repr(child) for child in self.children) + ']'
         return r
 
-    def __hash__(self) -> int:
-        return hash(tuple(value for attr, value in self.__dict__.items() if attr not in self._eq_exclude))
-
     def __eq__(self, other) -> bool:
-        if not isinstance(other, self.__class__):
-            return False
-
-        self_items = dict(self.__dict__)
-        other_items = dict(other.__dict__)
-
-        for item in self._eq_exclude:
-            self_items.pop(item, 0)
-            other_items.pop(item, 0)
-
-        return self_items == other_items and self.children == other.children
+        return isinstance(other, self.__class__) \
+            and self.children == other.children
 
     def __neq__(self, other) -> bool:
         return not self == other
@@ -53,6 +36,8 @@ class Node:
         """Returns True if the given object is a descendant of this node."""
 
         return other in self.children or any(other in child for child in self.children)
+
+    # TODO: Combine into nth_child
 
     @property
     def first_child(self) -> Optional['Node']:
@@ -154,6 +139,9 @@ class Node:
 
 class Leaf(Node):
     """A node that cannot have children"""
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, self.__class__)
 
     def append_child(self, child: Node) -> Node:
         raise ValueError(f"Node of type {self.node_name} cannot have children")

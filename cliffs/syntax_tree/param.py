@@ -28,6 +28,11 @@ class Parameter(Leaf):
         self.name = name
         self.typename = typename
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, self.__class__) \
+            and self.name == other.name \
+            and self.typename == other.typename
+
     def __str__(self) -> str:
         if self.typename is None:
             return f'<{self.name}>'

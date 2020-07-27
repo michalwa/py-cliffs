@@ -21,6 +21,11 @@ class Tail(Leaf):
         # Whether to capture untokenized plaintext under the tail parameter
         self.raw = False
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, self.__class__) \
+            and self.name == other.name \
+            and self.raw == other.raw
+
     def __str__(self) -> str:
         return f"<{self.name}...>"
 

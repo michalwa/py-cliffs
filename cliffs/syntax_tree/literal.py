@@ -25,6 +25,11 @@ class Literal(Leaf):
         self.value = value
         self.case_sensitive = True
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, self.__class__) \
+            and self.value == other.value \
+            and self.case_sensitive == other.case_sensitive
+
     def __str__(self) -> str:
         return self.value
 

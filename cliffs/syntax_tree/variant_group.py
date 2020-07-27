@@ -15,7 +15,6 @@ class VariantGroup(Identifiable, Node):
     """
 
     node_name = 'variant_group'
-    _eq_exclude = []
     _copy_attrs = ['parent', 'inherited_identifier']
 
     def __init__(self):
