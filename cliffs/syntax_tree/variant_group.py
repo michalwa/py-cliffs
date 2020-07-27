@@ -112,14 +112,13 @@ class VariantGroup(Identifiable, Node):
             raise best_fail
 
         # Raise the default fail otherwise
+        elif tokens != []:
+            raise CallMatchFail(f"Expected {self.expected_info()}, got {tokens[0]}")
         else:
-            if tokens == []:
-                raise CallMatchFail(f"Expected {self.expected_info()}")
-            else:
-                raise CallMatchFail(f"Expected {self.expected_info()}, got {tokens[0]}")
+            raise CallMatchFail(f"Expected {self.expected_info()}")
 
     def expected_info(self) -> str:
-        return 'one of: ' + ', '.join(set(variant.expected_info() for variant in self.children))
+        return ' or '.join(set(variant.expected_info() for variant in self.children))
 
 
 class Variant(Sequence):

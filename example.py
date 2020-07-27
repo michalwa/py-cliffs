@@ -63,6 +63,16 @@ def command_eval(expr: str):
     return eval(expr)
 
 
+# Most syntax elements support "greedy" matching with variant groups
+# - the variant with the most matching elements will be chosen
+@cli.command('scream|scream <what>')
+def command_scream(match: CallMatch, what: Optional[str] = None):
+    if match.vars[0] == 0:
+        print("AAAAAAAAAAAAAAAAAAAAAAAA")
+    else:
+        print(f"{what.upper()}!")
+
+
 # You can use a colon `:` to assign identifiers to optional sequences and variant groups,
 # these will be then added to parameters and can be recieved with an argument.
 # Note that if you assign an identifier to a group, its state won't be present in the
@@ -101,6 +111,11 @@ def command_repeat(n: int, what: str):
 def command_exit():
     print("Bye!")
     exit(0)
+
+
+@cli.command('{1 (1 2) (1 2 3)}')
+def command_123():
+    print("Hello, world!")
 
 
 @cli.command('help^')

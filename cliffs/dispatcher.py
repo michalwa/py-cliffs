@@ -1,6 +1,6 @@
 import inspect
-from typing import Any, Callable, Iterable, List, Optional, Type
-from .utils import dict_get_lazy, instance_or_kwargs
+from typing import Any, Callable, Iterable, List, Tuple, Optional, Type
+from .utils import dict_get_lazy, instance_or_kwargs, best
 from .call_match import CallMatch, CallMatchFail
 from .command import Command
 from .syntax_lexer import SyntaxLexer
@@ -117,36 +117,32 @@ class CommandDispatcher:
             based on the tokens of the call.
         """
 
-        best_succ_match = None  # Highest-scoring successful match
-        best_command = None     # Command having the highest-scoring successful match
-        best_fail_match = None  # Highest-scoring failed match
-        best_fail = None        # Exception from the highest-scoring failed match
+        matches = []  # type: List[Tuple[CallMatch, Command]]
+        fails = []  # type: List[Tuple[CallMatchFail, int]]
 
-        # Match all commands and look for the one with the highest score
+        # Collect matches and fails from commands
         for command in self._commands:
             match = CallMatch(call)
 
             try:
                 command.match(call, match)
-
-                if best_succ_match is None or match.score > best_succ_match.score:
-                    best_succ_match = match
-                    best_command = command
+                matches.append((match, command))
 
             except CallMatchFail as fail:
-                if best_fail_match is None or match.score > best_fail_match.score:
-                    best_fail_match = match
-                    best_fail = fail
+                if match.score > 0:
+                    fails.append((fail, match.score))
 
-        # If the highest-scoring match was successful, execute the command
-        if best_succ_match is not None and best_command is not None:
-            return best_command.execute(best_succ_match, callback_args)
+        # Find the match with the highest score and execute it
+        if matches != []:
+            best_match, matched_command = best(matches, lambda m: m[0].score)
+            return matched_command.execute(best_match, callback_args)
 
-        # Otherwise raise the error from the highest-scoring match
-        elif best_fail_match is not None and best_fail_match.score > 0 and best_fail is not None:
+        # If no command successfully matched, raise best scoring fail
+        elif fails != []:
+            best_fail, _ = best(fails, lambda f: f[1])
             raise best_fail
 
-        # Or unknown command error if it's 0
+        # ...or unknown command if there are no fails scoring above 0
         else:
             raise UnknownCommandError('Unknown command')
 

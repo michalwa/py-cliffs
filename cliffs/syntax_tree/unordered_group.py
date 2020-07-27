@@ -1,8 +1,8 @@
-from typing import List
-from itertools import permutations
+from typing import List, Tuple
 from .node import Node
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher, CallMatchFail
+from ..utils import best
 
 
 class UnorderedGroup(Node):
@@ -14,59 +14,63 @@ class UnorderedGroup(Node):
     node_name = 'unordered_group'
 
     def __str__(self) -> str:
-        return f"{{{' '.join(str(child) for child in self.children)}}}"
+        return '{' + ' '.join(str(child) for child in self.children) + '}'
 
     def flattened(self) -> Node:
         if self.num_children == 1:
-            return self.nth_child(-1).flattened()
+            return self.nth_child(0).flattened()
         else:
             return super().flattened()
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
 
-        best_fail = None
-        best_score = 0
-        matches = []
+        best_matches = []
+        score = 0
+        unused = list(self.children)
 
-        # TODO: Checking permutations is *very* inefficient! Do this procedurally
+        # Try to find a matching order until the unused children are exhausted
+        while unused != []:
+            matches = []  # type: List[Tuple[CallMatch, List[Token]]]
+            fails = []  # type: List[Tuple[CallMatchFail, int]]
 
-        for perm in permutations(self.children):
-            match_temp = match.branch()
-            tokens_temp = tokens
-            try:
-                for child in perm:
-                    tokens_temp = child.match_call(tokens_temp, matcher, match_temp)
+            # Collect matches from all unused children
+            for child in unused:
+                submatch = match.branch()
+                try:
+                    left_tokens = child.match_call(tokens, matcher, submatch)
+                    matches.append((child, submatch, left_tokens))
+                except CallMatchFail as fail:
+                    if submatch.score > 0:
+                        fails.append((fail, submatch.score))
 
-                # Match found
-                matches.append((match_temp, tokens_temp))
+            # Find the best and append it to the global list
+            if matches != []:
+                child, best_match, tokens = best(matches, lambda m: m[1].score)
+                best_matches.append(best_match)
+                unused.remove(child)
+                score += best_match.score
 
-            except CallMatchFail as fail:
-                if match_temp.score > best_score:
-                    best_fail = fail
-                    best_score = match_temp.score
-
-            finally:
-                if match_temp.score > best_score:
-                    best_score = match_temp.score
-
-        # Add the final best score to the total match score
-        match.score += best_score
-
-        # Choose best scoring match
-        if matches != []:
-            best_match, tokens = sorted(matches, key=lambda m: m[0].score, reverse=True)[0]
-            match.join(best_match)
-            return tokens
-
-        # If there was no successful permutation found, fail
-        else:
-            if best_fail is not None:
+            # If no unused child matched during an iteration, fail
+            elif fails != []:
+                best_fail, best_fail_score = best(fails, lambda f: f[1])
+                match.score += score + best_fail_score
                 raise best_fail
+
+            # If there is no appropriate fail to raise, raise a generic fail
             else:
-                if tokens == []:
-                    raise CallMatchFail(f"Expected {self.expected_info()}")
+                match.score += score
+
+                expected_info = ' or '.join(set(child.expected_info() for child in unused))
+                if tokens != []:
+                    raise CallMatchFail(f"Expected {expected_info}, got {tokens[0]}")
                 else:
-                    raise CallMatchFail(f"Expected {self.expected_info()}, got {tokens[0]}")
+                    raise CallMatchFail(f"Expected {expected_info}")
+
+        # Collect matches from all iterations
+        for best_match in best_matches:
+            match.join(best_match)
+
+        return tokens
 
     def expected_info(self) -> str:
-        return 'one of: ' + ', '.join(set(child.expected_info() for child in self.children))
+        return ' or '.join(set(child.expected_info() for child in self.children))
