@@ -1,4 +1,7 @@
-from typing import TypeVar, Type, Optional, Dict, Callable
+from typing import TypeVar, Type, Optional, Dict, Callable, Iterable
+
+
+_T = TypeVar('_T')
 
 
 class StrBuffer:
@@ -94,9 +97,6 @@ def dict_get_lazy(dict: Dict, key, fn_default: Callable):
     return dict[key] if key in dict else fn_default()
 
 
-_T = TypeVar('_T')
-
-
 def instance_or_kwargs(obj, cls: Type[_T]) -> _T:
     """Returns the object unchanged if it's an instance of the given class.
     Otherwise, if it is a dictionary, an instance of the given class is constructed
@@ -123,3 +123,21 @@ def instance_or_kwargs(obj, cls: Type[_T]) -> _T:
         return cls(**obj)
     else:
         raise TypeError(f"{obj} is neither an instance of {cls} nor a dictionary")
+
+
+def best(iterable: Iterable[_T], score: Callable[[_T], float] = lambda i: i) -> Optional[_T]:
+    """Returns the element from the iterable with the highest "score" provided by
+    the `score` function (the elements themselves are compared by default).
+
+    Parameters
+    ----------
+      * iterable: `Iterable[_T]` - The iterable to find the best element in.
+      * score: `_T -> float` (optional) - The scoring function. Defaults to the identity function.
+
+    Returns
+    -------
+      * The highest scoring element in the iterable or `None` if the iterable is empty.
+    """
+
+    s = sorted(iterable, key=score, reverse=True)
+    return None if s == [] else s[0]

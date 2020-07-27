@@ -97,7 +97,7 @@ def command_repeat(n: int, what: str):
 
 
 # There will be an info message logged that this command can be simplified
-@cli.command('exit|(quit|(bye|(leave)))', parser={'all_case_insensitive': True})
+@cli.command('(exit|(quit|bye)|leave)', parser={'all_case_insensitive': True})
 def command_exit():
     print("Bye!")
     exit(0)

@@ -28,6 +28,8 @@ class UnorderedGroup(Node):
         best_score = 0
         matches = []
 
+        # TODO: Checking permutations is *very* inefficient! Do this procedurally
+
         for perm in permutations(self.children):
             match_temp = match.branch()
             tokens_temp = tokens
@@ -53,7 +55,7 @@ class UnorderedGroup(Node):
         # Choose best scoring match
         if matches != []:
             best_match, tokens = sorted(matches, key=lambda m: m[0].score, reverse=True)[0]
-            match.update(best_match)
+            match.join(best_match)
             return tokens
 
         # If there was no successful permutation found, fail
@@ -62,3 +64,6 @@ class UnorderedGroup(Node):
                 raise best_fail
             else:
                 raise CallMatchFail('Unmatched unordered group')
+
+    def expected_info(self) -> str:
+        return 'one of: ' + ', '.join(set(child.expected_info() for child in self.children))

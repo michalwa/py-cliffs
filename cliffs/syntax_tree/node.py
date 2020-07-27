@@ -18,15 +18,19 @@ class Node:
     _copy_attrs = ['parent']  # type: List[str]
 
     def __init__(self):
+        self._eq_exclude += ['_eq_exclude', '_init_attrs', '_copy_attrs', 'parent', 'children']
+
         self.parent = None  # type: Optional[Node]
         self.children = []  # type: List[Node]
-        self._eq_exclude += ['parent', 'children']
 
     def __repr__(self) -> str:
         r = f'{self.node_name}'
         if self.children != []:
             r += '[' + ', '.join(repr(child) for child in self.children) + ']'
         return r
+
+    def __hash__(self) -> int:
+        return hash(tuple(value for attr, value in self.__dict__.items() if attr not in self._eq_exclude))
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
@@ -50,8 +54,12 @@ class Node:
         return other in self.children or any(other in child for child in self.children)
 
     @property
+    def first_child(self) -> Optional['Node']:
+        return self.children[0] if self.children != [] else None
+
+    @property
     def last_child(self) -> Optional['Node']:
-        return self.children[-1] if len(self.children) > 0 else None
+        return self.children[-1] if self.children != [] else None
 
     @property
     def num_children(self) -> int:
@@ -127,6 +135,9 @@ class Node:
         if match.terminated:
             raise SyntaxError(f"Tried matching {self.node_name} after matching was terminated")
         return self._match_call(tokens, matcher, match)
+
+    def expected_info(self) -> str:
+        return str(self)
 
 
 class Leaf(Node):

@@ -37,5 +37,5 @@ class OptionalSequence(Identifiable, Node):
         else:
             match.opts.append(True)
 
-        match.update(match_temp)
+        match.join(match_temp)
         return tokens_temp

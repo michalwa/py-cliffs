@@ -83,8 +83,8 @@ class CallMatch:
         self.vars = []  # type: List[int]
         self.tail = []  # type: List[str]
 
-    def update(self, other: 'CallMatch') -> None:
-        """Pushes the values appended to the given match to this match instance.
+    def join(self, other: 'CallMatch') -> None:
+        """Collects the values populated to the given branched match into this match.
 
         Parameters
         ----------

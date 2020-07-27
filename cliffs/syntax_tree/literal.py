@@ -48,3 +48,6 @@ class Literal(Leaf):
             return self.value == string
         else:
             return self.value.lower() == string.lower()
+
+    def expected_info(self) -> str:
+        return f"'{self.value}'"

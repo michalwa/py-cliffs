@@ -35,3 +35,6 @@ class Sequence(Node):
         for child in self.children:
             tokens = child.match_call(tokens, matcher, match)
         return tokens
+
+    def expected_info(self) -> str:
+        return self.first_child.expected_info()

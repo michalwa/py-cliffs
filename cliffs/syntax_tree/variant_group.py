@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Tuple
 from .node import Node
 from .identifiable import Identifiable
 from .sequence import Sequence
 from ..token import Token
 from ..call_match import CallMatch, CallMatcher, CallMatchFail
+from ..utils import best
 
 
 class VariantGroup(Identifiable, Node):
@@ -67,29 +68,53 @@ class VariantGroup(Identifiable, Node):
             return flat
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        first_fail = None
 
+        matches = []  # type: List[Tuple[int, CallMatch, List[Token]]]
+        fails = []  # type: List[Tuple[CallMatchFail, int]]
+
+        # Iterate through variants collecting:
+        # - matches in tuples: (index, match, leftover_tokens)
+        # - non-0-scoring fails (CallMatchFail) in tuples: (fail, score)
         for index, variant in enumerate(self.children):
-            match_temp = match.branch()
+            submatch = match.branch()
+
             try:
-                tokens_temp = variant.match_call(tokens, matcher, match_temp)
-
-                if self.identifier is not None:
-                    match.params[self.identifier] = index
-                else:
-                    match.vars.append(index)
-
-                match.update(match_temp)
-                return tokens_temp
+                left_tokens = variant.match_call(tokens, matcher, submatch)
+                matches.append((index, submatch, left_tokens))
 
             except CallMatchFail as fail:
-                if first_fail is None:
-                    first_fail = fail
+                if submatch.score > 0:
+                    fails.append((fail, submatch.score))
 
-        if first_fail is not None:
-            raise first_fail
+        # If a best match exists...
+        if matches != []:
+            # ...find it...
+            best_index, best_match, best_tokens = best(matches, lambda m: m[1].score)
+
+            # ...append its index to the match...
+            if self.identifier is not None:
+                best_match.params[self.identifier] = best_index
+            else:
+                best_match.vars.append(best_index)
+
+            # ...update the super-match and return leftover tokens
+            match.join(best_match)
+            return best_tokens
+
+        # If the best fail exists, raise it
+        elif fails != []:
+            best_fail, _ = best(fails, lambda f: f[1])
+            raise best_fail
+
+        # Raise the default fail otherwise
         else:
-            raise CallMatchFail('No variant present')
+            if tokens == []:
+                raise CallMatchFail(f"Expected {self.expected_info()}")
+            else:
+                raise CallMatchFail(f"Expected {self.expected_info()}, got {tokens[0]}")
+
+    def expected_info(self) -> str:
+        return 'one of: ' + ', '.join(set(variant.expected_info() for variant in self.children))
 
 
 class Variant(Sequence):
