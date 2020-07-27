@@ -9,6 +9,9 @@ command line interfaces for your applications. Its syntax specification method
 allows command definitions and usage help to be united with a single syntax.
 This way usage specification can be directly used to generate command parsers.
 
+The advantage of this method is that it makes it possible to avoid long chained
+method calls for constructing command parsers, as it is usually done in libraries.
+
 ## Syntax
 **Clifford** uses a rather intuitive syntax to specify the syntax of commands:
 - `literals` specify required terms that the command call must contain
