@@ -59,6 +59,6 @@ does not match type {self.typename}")
         else:
             value = tokens[0].value
 
-        match.score += 1
+        match.score += 0.5
         match.params[self.name] = value
         return tokens[1:]

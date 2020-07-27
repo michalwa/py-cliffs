@@ -113,9 +113,10 @@ def command_exit():
     exit(0)
 
 
-@cli.command('{1 (1 2) (1 2 3)}')
-def command_123():
-    print("Hello, world!")
+# Literals have priority over parameters
+@cli.command('foo <bar>|foo bar')
+def command_foo(bar = None):
+    print(bar)
 
 
 @cli.command('help^')
