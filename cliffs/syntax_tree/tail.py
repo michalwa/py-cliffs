@@ -1,7 +1,7 @@
 from typing import List
 from .node import Leaf
 from ..token import Token
-from ..call_match import CallMatch, CallMatcher, CallMatchFail
+from ..call_match import *
 
 
 class Tail(Leaf):
@@ -29,7 +29,7 @@ class Tail(Leaf):
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) == 0:
-            raise CallMatchFail(f"Expected {self.name}...")
+            raise TokensExhaustedError(f"Expected {self.name}...")
         else:
             text = match.raw[tokens[0].start:tokens[-1].end]
             if text == '':

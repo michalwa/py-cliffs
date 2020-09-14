@@ -2,11 +2,8 @@ from typing import List
 from .node import Node
 from .identifiable import Identifiable
 from ..token import Token
-from ..call_match import CallMatch, CallMatcher, CallMatchFail
+from ..call_match import *
 
-
-# FIXME: Unmatched optional sequence leaving unmatched tokens should result
-# in the sequence raising a CallMatchFail instead of "Too many arguments" being reported
 
 class OptionalSequence(Identifiable, Node):
     """An optional sequence.
@@ -24,10 +21,15 @@ class OptionalSequence(Identifiable, Node):
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         tokens_temp = tokens
         match_temp = match.branch()
+
         for child in self.children:
             try:
                 tokens_temp = child.match_call(tokens_temp, matcher, match_temp)
-            except CallMatchFail:
+
+            except CallMatchFail as f:
+                if isinstance(f, TokensExhaustedError) and match_temp.score > 0:
+                    raise f
+
                 if self.identifier is not None:
                     match.params[self.identifier] = False
                 else:

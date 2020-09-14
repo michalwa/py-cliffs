@@ -1,7 +1,7 @@
 from typing import List, Tuple
 from .node import Node
 from ..token import Token
-from ..call_match import CallMatch, CallMatcher, CallMatchFail
+from ..call_match import *
 from ..utils import best
 
 
@@ -64,7 +64,7 @@ class UnorderedGroup(Node):
                 if tokens != []:
                     raise CallMatchFail(f"Expected {expected_info}, got {tokens[0]}")
                 else:
-                    raise CallMatchFail(f"Expected {expected_info}")
+                    raise TokensExhaustedError(f"Expected {expected_info}")
 
         # Collect matches from all iterations
         for best_match in best_matches:

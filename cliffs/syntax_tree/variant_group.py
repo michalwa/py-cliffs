@@ -3,7 +3,7 @@ from .node import Node
 from .identifiable import Identifiable
 from .sequence import Sequence
 from ..token import Token
-from ..call_match import CallMatch, CallMatcher, CallMatchFail
+from ..call_match import *
 from ..utils import best
 
 
@@ -115,7 +115,7 @@ class VariantGroup(Identifiable, Node):
         elif tokens != []:
             raise CallMatchFail(f"Expected {self.expected_info()}, got {tokens[0]}")
         else:
-            raise CallMatchFail(f"Expected {self.expected_info()}")
+            raise TokensExhaustedError(f"Expected {self.expected_info()}")
 
     def expected_info(self) -> str:
         return ' or '.join(set(variant.expected_info() for variant in self.children))

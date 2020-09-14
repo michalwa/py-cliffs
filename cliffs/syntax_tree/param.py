@@ -1,7 +1,7 @@
 from typing import List, Optional
 from .node import Leaf
 from ..token import Token
-from ..call_match import CallMatch, CallMatcher, CallMatchFail
+from ..call_match import *
 
 
 class Parameter(Leaf):
@@ -44,7 +44,7 @@ class Parameter(Leaf):
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) < 1:
-            raise CallMatchFail(f'Expected argument for parameter <{self.name}>')
+            raise TokensExhaustedError(f'Expected argument for parameter <{self.name}>')
 
         # Type construction
         if self.typename is not None:

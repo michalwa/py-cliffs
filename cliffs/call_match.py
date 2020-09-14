@@ -3,14 +3,23 @@ from .utils import loose_bool
 
 
 class CallMatchFail(Exception):
-    """Raised by syntax tree nodes when matching fails in an expected way,
+    """
+    Raised by syntax tree nodes when matching fails in an expected way,
     i.e. if a recursive parser call signals failed parsing to an upper parser,
     but also returned to the top-level caller if the root parser fails.
     """
 
 
+class TokensExhaustedError(CallMatchFail):
+    """
+    Raised by syntax tree nodes when matching fails because tokens were expected
+    and the incoming token stream was exhausted.
+    """
+
+
 class CallMatcher:
-    """Aids in the process of matching a command call to a parsed command structure.
+    """
+    Aids in the process of matching a command call to a parsed command structure.
     Stores configuration parameters regulating how the tokens are matched and
     manages registered parameter types.
     """
