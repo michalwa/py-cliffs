@@ -29,7 +29,7 @@ class Tail(Leaf):
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) == 0:
-            raise TokensExhaustedError(f"Expected {self.name}...")
+            raise CallMatchFail(f"Expected {self.name}...")
         else:
             text = match.raw[tokens[0].start:tokens[-1].end]
             if text == '':

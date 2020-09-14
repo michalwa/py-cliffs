@@ -10,13 +10,6 @@ class CallMatchFail(Exception):
     """
 
 
-class TokensExhaustedError(CallMatchFail):
-    """
-    Raised by syntax tree nodes when matching fails because tokens were expected
-    and the incoming token stream was exhausted.
-    """
-
-
 class CallMatcher:
     """
     Aids in the process of matching a command call to a parsed command structure.

@@ -37,7 +37,7 @@ class Literal(Leaf):
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) < 1:
-            raise TokensExhaustedError(f"Expected literal '{self.value}'")
+            raise CallMatchFail(f"Expected literal '{self.value}'")
         if not self.match(tokens[0].value):
             raise CallMatchFail(f"Expected literal '{self.value}', got {tokens[0]}")
 

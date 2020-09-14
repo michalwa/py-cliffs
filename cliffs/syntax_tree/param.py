@@ -44,7 +44,7 @@ class Parameter(Leaf):
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) < 1:
-            raise TokensExhaustedError(f'Expected argument for parameter <{self.name}>')
+            raise CallMatchFail(f'Expected argument for parameter <{self.name}>')
 
         # Type construction
         if self.typename is not None:

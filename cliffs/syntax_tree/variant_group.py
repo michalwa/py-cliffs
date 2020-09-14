@@ -115,7 +115,7 @@ class VariantGroup(Identifiable, Node):
         elif tokens != []:
             raise CallMatchFail(f"Expected {self.expected_info()}, got {tokens[0]}")
         else:
-            raise TokensExhaustedError(f"Expected {self.expected_info()}")
+            raise CallMatchFail(f"Expected {self.expected_info()}")
 
     def expected_info(self) -> str:
         return ' or '.join(set(variant.expected_info() for variant in self.children))

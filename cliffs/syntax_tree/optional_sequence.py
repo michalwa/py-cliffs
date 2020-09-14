@@ -27,7 +27,14 @@ class OptionalSequence(Identifiable, Node):
                 tokens_temp = child.match_call(tokens_temp, matcher, match_temp)
 
             except CallMatchFail as f:
-                if isinstance(f, TokensExhaustedError) and match_temp.score > 0:
+
+                # NOTE: This causes some issues if there are multiple sibling optional sequences
+                # starting with the same literal or with other nodes that match the same token,
+                # but I have no better idea how to implement this at the moment.
+
+                # If some tokens matched, raise fail
+                if match_temp.score > 0:
+                    match.join(match_temp)
                     raise f
 
                 if self.identifier is not None:

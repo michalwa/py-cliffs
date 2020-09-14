@@ -64,7 +64,7 @@ class UnorderedGroup(Node):
                 if tokens != []:
                     raise CallMatchFail(f"Expected {expected_info}, got {tokens[0]}")
                 else:
-                    raise TokensExhaustedError(f"Expected {expected_info}")
+                    raise CallMatchFail(f"Expected {expected_info}")
 
         # Collect matches from all iterations
         for best_match in best_matches:
