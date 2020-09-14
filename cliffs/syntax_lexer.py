@@ -35,10 +35,11 @@ class SyntaxLexer:
 
                 current += c
 
-                # Trim off accumulated "static" (always having the same value) tokens
-                for static in list('<>()[]{}:|*^') + ['...']:
-                    if str(current).endswith(static):
-                        current.trim(end=-len(static))
+                # Trim off accumulated punctuation tokens
+                for punct in list('<>()[]{}:|*^') + ['...']:
+                    if str(current).endswith(punct):
+                        current.trim(end=-len(punct))
                         if current != '':
-                            yield Token('symbol', current.flush(), current_start, i - len(static) + 1)
-                        yield Token('static', static, i - len(static) + 1, i + 1)
+                            yield Token('symbol', current.flush(), current_start, i - len(punct) + 1)
+
+                        yield Token(None, punct, i - len(punct) + 1, i + 1)
