@@ -25,7 +25,7 @@ cli = CommandDispatcher(matcher=custom_matcher)
 
 
 # The decorator registers the function as the callback for the specified command
-@cli.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message...*>]')
+@cli.command('set [loud] alarm at <time:12h_time> (am|pm) [with message <message...>]')
 def command_set_alarm(match: CallMatch):
 
     # The callback recieves a `match` object describing the configuration
@@ -55,7 +55,7 @@ def command_set_alarm(match: CallMatch):
 # You can pass parameters directly as arguments to a callback.
 # This is actually the preferred way of setting up commands, the above example
 # was just for demonstration purposes.
-@cli.command('(eval | =) <expr...*>')
+@cli.command('(eval | =) <expr...>')
 def command_eval(expr: str):
     """Evaluates a given expression."""
 
@@ -139,19 +139,22 @@ if __name__ == '__main__':
                 # Callback args will be passed to command callbacks for successful command matches
                 args = {'now': datetime.now()}
 
-                result = cli.dispatch(input('> '), **args)
+                command = input('\033[94m> ')
+                print('\033[0m', end='')
+
+                result = cli.dispatch(command, **args)
                 if result is not None:
                     print(f'= {result}')
 
             # `CallMatchFail` is raised when no command fully matched the call
             # (the error from the best matched command is returned)
             except CallMatchFail as fail:
-                print(f'Invalid syntax: {fail}')
+                print(f'\033[91mInvalid syntax: {fail}\033[0m')
 
             # `UnknownCommandError` is raised when no command got a match score higher than 0
             # (no element was matched in any of the registered commands)
             except UnknownCommandError:
-                print('Unknown command')
+                print('\033[91mUnknown command\033[0m')
 
     except KeyboardInterrupt:
         pass

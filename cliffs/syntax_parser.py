@@ -136,21 +136,21 @@ class SyntaxParser:
                     if self.all_case_insensitive:
                         current.nth_child(-1).case_sensitive = False
 
+            # Varargs asterisk
+            elif token.value == '*':
+                if state != 'AFTER_PARAM_NAME' or param_name is None:
+                    raise SyntaxError(f"Unexpected {token}")
+
+                current.append_child(VarArgs(param_name))
+                state = 'PARAM_SKIP'
+
             # Tail ellipsis
             elif token.value == '...':
                 if state != 'AFTER_PARAM_NAME' or param_name is None:
                     raise SyntaxError(f"Unexpected {token}")
 
                 current.append_child(Tail(param_name))
-                state = 'AFTER_TAIL'
-
-            # Raw tail asterisk
-            elif token.value == '*':
-                if state != 'AFTER_TAIL':
-                    raise SyntaxError(f"Unexpected {token}")
-
-                current.nth_child(-1).raw = True
-                state = 'AFTER_TAIL_RAW'
+                state = 'PARAM_SKIP'
 
             # Case-insensitive hat/caret
             elif token.value == '^':
@@ -199,7 +199,7 @@ class SyntaxParser:
                     state = 'NORMAL'
 
                 # Closing tail delimiter
-                elif state in ['AFTER_TAIL', 'AFTER_TAIL_RAW']:
+                elif state == 'PARAM_SKIP':
                     state = 'NORMAL'
 
                 else:

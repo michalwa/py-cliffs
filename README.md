@@ -19,9 +19,9 @@ method calls for constructing command parsers, as it is usually done in librarie
 - `<parameters>` accept a single token in the command call and store its value
   for processing by the command handler; parameters can also specify types
   (`<param: type>`) which their values will be validated for and parsed into
+- `<varargs*>` will collect any remaining tokens and store them as a list
 - `<tails...>` will collect any remaining tokens after all previous elements
-  have been matched; tails can also collect raw text if you suffix them with an asterisk
-  (`<tail...*>`)
+  as raw text
 - `(variant|groups)` encapsulate sequences of elements and accept only one of
   those sequences (index of the present sequence is stored for processing by the handler)
 - `[optional sequences]` may or may not be present in the command call

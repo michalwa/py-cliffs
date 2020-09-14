@@ -5,6 +5,9 @@ from ..token import Token
 from ..call_match import CallMatch, CallMatcher, CallMatchFail
 
 
+# FIXME: Unmatched optional sequence leaving unmatched tokens should result
+# in the sequence raising a CallMatchFail instead of "Too many arguments" being reported
+
 class OptionalSequence(Identifiable, Node):
     """An optional sequence.
 
