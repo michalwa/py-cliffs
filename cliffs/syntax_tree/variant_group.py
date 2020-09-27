@@ -3,8 +3,9 @@ from .node import Node
 from .identifiable import Identifiable
 from .sequence import Sequence
 from ..token import Token
-from ..call_match import *
 from ..utils import best
+from ..call_match import *
+from ..call_matcher import CallMatcher
 
 
 class VariantGroup(Identifiable, Node):

@@ -3,6 +3,7 @@ from .node import Node
 from .identifiable import Identifiable
 from ..token import Token
 from ..call_match import *
+from ..call_matcher import CallMatcher
 
 
 class OptionalSequence(Identifiable, Node):

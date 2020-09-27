@@ -3,7 +3,8 @@ from inspect import signature
 from .utils import instance_or_kwargs
 from .syntax_tree import Node as SyntaxNode
 from .call_lexer import CallLexer
-from .call_match import CallMatcher, CallMatch, CallMatchFail
+from .call_match import CallMatch, CallMatchFail
+from .call_matcher import CallMatcher
 import textwrap
 
 

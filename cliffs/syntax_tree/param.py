@@ -2,6 +2,7 @@ from typing import List, Optional
 from .node import Leaf
 from ..token import Token
 from ..call_match import *
+from ..call_matcher import CallMatcher
 
 
 class Parameter(Leaf):
@@ -48,9 +49,8 @@ class Parameter(Leaf):
 
         # Type construction
         if self.typename is not None:
-            typ = matcher.get_type(self.typename)
             try:
-                value = typ(tokens[0].value)
+                value = matcher.parse_arg(self.typename, tokens[0].value)
             except ValueError:
                 raise CallMatchFail(f"Argument {tokens[0]} for parameter <{self.name}> "
                                     f"does not match type {self.typename}")

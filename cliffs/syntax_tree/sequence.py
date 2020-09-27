@@ -1,7 +1,8 @@
 from typing import List
 from .node import Node
 from ..token import Token
-from ..call_match import CallMatch, CallMatcher
+from ..call_match import CallMatch
+from ..call_matcher import CallMatcher
 
 
 class Sequence(Node):

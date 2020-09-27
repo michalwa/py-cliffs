@@ -1,7 +1,8 @@
 import inspect
 from typing import List, Optional, Iterable
 from ..token import Token
-from ..call_match import CallMatch, CallMatcher
+from ..call_match import CallMatch
+from ..call_matcher import CallMatcher
 
 
 class Node:
