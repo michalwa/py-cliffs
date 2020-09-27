@@ -1,5 +1,5 @@
 import inspect
-from typing import List, Optional, Iterable
+from typing import List, Optional
 from ..token import Token
 from ..call_match import CallMatch
 from ..call_matcher import CallMatcher
@@ -59,20 +59,6 @@ class Node:
         self.children.insert(index, child)
         return self
 
-    def traverse(self) -> Iterable['Node']:
-        """Recursively constructs an iterator that will traverse the descendants
-        of this node (including this node itself).
-
-        Returns
-        ------
-          * `Iterable[SyntaxNode]`: This node and its descendants.
-        """
-
-        yield self
-        for child in self.children:
-            for node in child.iter_traverse():
-                yield node
-
     def flattened(self) -> 'Node':
         """Recusively creates a flattened copy of this node with minimized number
         of levels of descendants.
@@ -96,14 +82,7 @@ class Node:
 
         return new
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        """This method is proxied by `match_call` which does additional checks
-        before passing to this method. Refer to the documentation of `match_call`
-        for more information.
-        """
-        return tokens
-
-    def match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         """Tries to parse the given call tokens into the given match instance.
 
         Parameters
@@ -119,7 +98,8 @@ class Node:
 
         if match.terminated:
             raise SyntaxError(f"Tried matching {self.node_name} after matching was terminated")
-        return self._match_call(tokens, matcher, match)
+
+        return tokens
 
     def expected_info(self) -> str:
         return str(self)

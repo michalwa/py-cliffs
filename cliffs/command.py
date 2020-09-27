@@ -51,7 +51,7 @@ class Command:
 
         match.tokens = list(self.lexer.tokenize(call))
 
-        left = self.syntax.match_call(match.tokens, self.matcher, match)
+        left = self.syntax.match(match.tokens, self.matcher, match)
         if len(left) > 0:
             raise CallMatchFail('Too many arguments')
 

@@ -23,7 +23,8 @@ class UnorderedGroup(Node):
         else:
             return super().flattened()
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+        tokens = super().match(tokens, matcher, match)
 
         best_matches = []
         score = 0
@@ -38,7 +39,7 @@ class UnorderedGroup(Node):
             for child in unused:
                 submatch = match.branch()
                 try:
-                    left_tokens = child.match_call(tokens, matcher, submatch)
+                    left_tokens = child.match(tokens, matcher, submatch)
                     matches.append((child, submatch, left_tokens))
                 except CallMatchFail as fail:
                     if submatch.score > 0:

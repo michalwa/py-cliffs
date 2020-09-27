@@ -36,16 +36,18 @@ class Literal(Leaf):
     def __repr__(self) -> str:
         return f'literal {repr(self.value)}'
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+        tokens = super().match(tokens, matcher, match)
+
         if len(tokens) < 1:
             raise CallMatchFail(f"Expected literal '{self.value}'")
-        if not self.match(tokens[0].value):
+        if not self.compare(tokens[0].value):
             raise CallMatchFail(f"Expected literal '{self.value}', got {tokens[0]}")
 
         match.score += 1
         return tokens[1:]
 
-    def match(self, string: str) -> bool:
+    def compare(self, string: str) -> bool:
         """Checks if the given string matches this literal."""
 
         if self.case_sensitive:

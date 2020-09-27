@@ -43,7 +43,9 @@ class Parameter(Leaf):
     def __repr__(self) -> str:
         return f'param {repr(self.name)}'
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+        tokens = super().match(tokens, matcher, match)
+
         if len(tokens) < 1:
             raise CallMatchFail(f"Expected argument for parameter <{self.name}>")
 

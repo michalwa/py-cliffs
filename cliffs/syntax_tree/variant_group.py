@@ -72,7 +72,8 @@ class VariantGroup(Identifiable, Node):
 
             return flat
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+        tokens = super().match(tokens, matcher, match)
 
         matches = []  # type: List[Tuple[int, CallMatch, List[Token]]]
         fails = []  # type: List[Tuple[CallMatchFail, int]]
@@ -84,7 +85,7 @@ class VariantGroup(Identifiable, Node):
             submatch = match.branch()
 
             try:
-                left_tokens = variant.match_call(tokens, matcher, submatch)
+                left_tokens = variant.match(tokens, matcher, submatch)
                 matches.append((index, submatch, left_tokens))
 
             except CallMatchFail as fail:

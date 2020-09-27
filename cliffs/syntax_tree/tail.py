@@ -28,7 +28,9 @@ class Tail(Leaf):
     def __repr__(self) -> str:
         return f'tail {repr(self.name)}'
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+        tokens = super().match(tokens, matcher, match)
+
         if len(tokens) == 0:
             raise CallMatchFail(f"Expected {self.name}...")
         else:

@@ -19,13 +19,15 @@ class OptionalSequence(Identifiable, Node):
         children = ' '.join(str(child) for child in self.children)
         return f"[{children}]"
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+        tokens = super().match(tokens, matcher, match)
+
         tokens_temp = tokens
         match_temp = match.branch()
 
         for child in self.children:
             try:
-                tokens_temp = child.match_call(tokens_temp, matcher, match_temp)
+                tokens_temp = child.match(tokens_temp, matcher, match_temp)
 
             except CallMatchFail as f:
 

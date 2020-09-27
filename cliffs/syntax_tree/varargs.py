@@ -30,7 +30,9 @@ class VarArgs(Leaf):
     def __repr__(self) -> str:
         return f'varargs {repr(self.name)}'
 
-    def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
+        tokens = super().match(tokens, matcher, match)
+
         match[self.name] = [token.value for token in tokens]
         match.terminated = True  # Disallow further elements to be matched
         return []
