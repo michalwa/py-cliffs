@@ -97,9 +97,9 @@ class VariantGroup(Identifiable, Node):
 
             # ...append its index to the match...
             if self.identifier is not None:
-                best_match.params[self.identifier] = best_index
+                best_match[self.identifier] = best_index
             else:
-                best_match.vars.append(best_index)
+                best_match.add_variant(best_index)
 
             # ...update the super-match and return leftover tokens
             match.join(best_match)

@@ -1,6 +1,6 @@
 from typing import Optional, Callable, Iterable
 from inspect import signature
-from .utils import dict_get_lazy, instance_or_kwargs
+from .utils import instance_or_kwargs
 from .syntax_tree import Node as SyntaxNode
 from .call_lexer import CallLexer
 from .call_match import CallMatcher, CallMatch, CallMatchFail
@@ -28,15 +28,10 @@ class Command:
 
         self.syntax = syntax
         self.callback = callback
-
-        lexer = dict_get_lazy(kwargs, 'lexer', CallLexer)
-        self.lexer = instance_or_kwargs(lexer, CallLexer)
-
-        matcher = dict_get_lazy(kwargs, 'matcher', CallMatcher)
-        self.matcher = instance_or_kwargs(matcher, CallMatcher)
-
+        self.lexer = instance_or_kwargs(kwargs.get('lexer', {}), CallLexer)
+        self.matcher = instance_or_kwargs(kwargs.get('matcher', {}), CallMatcher)
         self.description = kwargs.get('description', None)  # type: Optional[str]
-        self.hidden = kwargs.get('hidden', False)
+        self.hidden = kwargs.get('hidden', False)  # type: bool
 
     def match(self, call: str, match: CallMatch):
         """Tries to match the given call to this command's syntax and populates
@@ -77,12 +72,12 @@ class Command:
         # Pass only those args that are required by the callback signature
         sig = signature(self.callback)
         callback_args.update({'match': match})
-        callback_args.update(match.params)
+        callback_args.update(match._params)
         args = dict((p, callback_args[p]) for p in sig.parameters if p in callback_args)
 
         return self.callback(**args)
 
-    def get_usage_lines(self, **kwargs) -> Iterable[str]:
+    def get_usage(self, **kwargs) -> Iterable[str]:
         """Returns the auto-generated usage help message for this command.
 
         Keyword arguments

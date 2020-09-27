@@ -3,7 +3,6 @@ import logging
 from typing import Optional
 from datetime import datetime
 from time import struct_time, strptime, strftime
-
 from cliffs import *
 
 
@@ -33,17 +32,17 @@ def command_set_alarm(match: CallMatch):
     #
     #   match.tokens      - the full tokenized call
     #   match[param_name] - value of the specified parameter
-    #   match.opt(i)      - boolean indicating whether the i-th optional sequence is present
-    #   match.var(i)      - 0-based index of the present variant of the i-th variant group
+    #   match.optional(i) - boolean indicating whether the i-th optional sequence is present
+    #   match.variant(i)  - 0-based index of the present variant of the i-th variant group
     #
 
     # Check whether optional sequence is present
-    loud = match.opts[0]  # type: bool
+    loud = match.optional(0)
     # Retrieve parameter values
-    time = match.params['time']  # type: struct_time
-    message = match.params['message'] if match.opts[1] else None  # type: Optional[str]
+    time = match['time']  # type: struct_time
+    message = match['message'] if match.optional(1) else None  # type: Optional[str]
     # Get variant index
-    am_pm = ['am', 'pm'][match.vars[0]]  # type: str
+    am_pm = ['am', 'pm'][match.variant(0)]  # type: str
 
     # Print something out
     t = 'Setting ' + ('a loud ' if loud else 'an ') + 'alarm at ' + strftime('%I:%M', time) + ' ' + am_pm.upper()
@@ -67,7 +66,7 @@ def command_eval(expr: str):
 # - the variant with the most matching elements will be chosen
 @cli.command('scream|scream <what>')
 def command_scream(match: CallMatch, what: Optional[str] = None):
-    if match.vars[0] == 0:
+    if match.variant(0) == 0:
         print("AAAAAAAAAAAAAAAAAAAAAAAA")
     else:
         print(f"{what.upper()}!")
@@ -119,6 +118,7 @@ def command_foo(bar = None):
     print(bar)
 
 
+# "help" will be matched case-insensitively
 @cli.command('help^')
 def command_help():
     """Displays this help message"""
@@ -126,9 +126,9 @@ def command_help():
     print('Known commands')
     print('--------------')
 
-    # Use `get_usage_lines()` to automatically build a usage help message
+    # Use `get_usage()` to automatically build a usage help message
     # `Command` objects can override their help messages
-    print('\n'.join(cli.get_usage_lines(separator='')))
+    print('\n'.join(cli.get_usage(separator='')))
 
 
 if __name__ == '__main__':

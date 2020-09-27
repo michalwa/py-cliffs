@@ -30,6 +30,6 @@ class VarArgs(Leaf):
         return f'varargs {repr(self.name)}'
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        match.params[self.name] = [token.value for token in tokens]
+        match[self.name] = [token.value for token in tokens]
         match.terminated = True  # Disallow further elements to be matched
         return []

@@ -1,9 +1,8 @@
 import inspect
 from typing import Any, Callable, Iterable, List, Tuple, Optional, Type
-from .utils import dict_get_lazy, instance_or_kwargs, best
+from .utils import instance_or_kwargs, best
 from .call_match import CallMatch, CallMatchFail
 from .command import Command
-from .syntax_lexer import SyntaxLexer
 from .syntax_parser import SyntaxParser
 
 
@@ -31,13 +30,12 @@ class CommandDispatcher:
           * command_class: `Type[Command]` - The class to construct for new commands.
         """
 
-        self._commands = []  # type: List[Command]
-
-        parser = dict_get_lazy(kwargs, 'parser', SyntaxParser)
-        self.parser = instance_or_kwargs(parser, SyntaxParser)
-
+        self.parser = instance_or_kwargs(kwargs.get('parser', {}), SyntaxParser)
         self.command_class = kwargs.get('command_class', Command)  # type: Type[Command]
 
+        self._commands = []  # type: List[Command]
+
+        # Kwargs to be passed to commands constructed with @command
         self._command_kwargs = {}
         if 'call_lexer' in kwargs:
             self._command_kwargs['lexer'] = kwargs['call_lexer']
@@ -76,7 +74,7 @@ class CommandDispatcher:
 
         parser = instance_or_kwargs(kwargs.get('parser', self.parser), SyntaxParser)
 
-        st_root = parser.parse(syntax)
+        syntax_root = parser.parse(syntax)
         command_class = kwargs.pop('command_class', self.command_class)  # type: Type[Command]
 
         def decorator(f: Callable) -> Command:
@@ -89,7 +87,7 @@ class CommandDispatcher:
                 # Dedent and remove leading and trailing empty lines
                 kwargs['description'] = inspect.cleandoc(f.__doc__).strip('\n')
 
-            cmd = command_class(st_root, f, **kwargs)
+            cmd = command_class(syntax_root, f, **kwargs)
             self.register(cmd)
             return cmd
 
@@ -146,7 +144,7 @@ class CommandDispatcher:
         else:
             raise UnknownCommandError('Unknown command')
 
-    def get_usage_lines(self, separator: Optional[str] = None, **kwargs) -> Iterable[str]:
+    def get_usage(self, separator: Optional[str] = None, **kwargs) -> Iterable[str]:
         """Returns the message composed of usage help messages of registered commands
         as individual lines.
 
@@ -168,12 +166,12 @@ class CommandDispatcher:
         lines = []
 
         for i, command in enumerate(self._commands):
-            command_lines = list(command.get_usage_lines(**kwargs))
+            command_usage = list(command.get_usage(**kwargs))
 
-            if command_lines != []:
+            if command_usage != []:
                 if separator is not None and i > 0:
                     lines.append(separator)
 
-                lines += command_lines
+                lines += command_usage
 
         return lines

@@ -34,7 +34,7 @@ class Tail(Leaf):
             text = match.raw[tokens[0].start:tokens[-1].end]
             if text == '':
                 raise CallMatchFail(f"Expected {self.name}...")
-            match.params[self.name] = text
+            match[self.name] = text
 
         match.terminated = True  # Disallow further elements to be matched
         return []

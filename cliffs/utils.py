@@ -78,23 +78,18 @@ def loose_bool(s: str) -> bool:
     s = s.strip()
 
     try:
-        f = float(s)
-        return bool(f)
+        return bool(float(s))
     except ValueError:
         pass
 
     s = s.lower()
-    if s in ['y', 'yes', 't', 'true', 'do', 'ok', 'sure', 'alright']:
+    if s in ['y', 'yes', 't', 'true', 'do', 'ok']:
         return True
     elif s in ['n', 'no', 'f', 'false', 'dont']:
         return False
 
     else:
-        raise ValueError(f"String '{s}' cannot be loosely casted to a boolean")
-
-
-def dict_get_lazy(dict: Dict, key, fn_default: Callable):
-    return dict[key] if key in dict else fn_default()
+        raise ValueError(f"String {repr(s)} cannot be loosely casted to a boolean")
 
 
 def instance_or_kwargs(obj, cls: Type[_T]) -> _T:

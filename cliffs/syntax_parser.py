@@ -1,7 +1,7 @@
 import logging
 from .syntax_lexer import SyntaxLexer
 from .syntax_tree import *
-from .utils import dict_get_lazy, instance_or_kwargs
+from .utils import instance_or_kwargs
 
 
 class SymbolList:
@@ -39,7 +39,7 @@ class SyntaxParser:
     function of recursive parsers for command calls."""
 
     def __init__(self, **kwargs):
-        """Initializes a syntax specification parser.
+        """Initializes a syntax parser.
 
         Keyword arguments
         -----------------
@@ -62,8 +62,7 @@ class SyntaxParser:
         self.simplify = kwargs['simplify_mode'] if 'simplify_mode' in kwargs\
             and kwargs['simplify_mode'] in ('no', 'warn', 'yes', 'silently') else 'warn'
 
-        lexer = dict_get_lazy(kwargs, 'lexer', SyntaxLexer)
-        self.lexer = instance_or_kwargs(lexer, SyntaxLexer)
+        self.lexer = instance_or_kwargs(kwargs.get('lexer', {}), SyntaxLexer)
 
         self.symbol_list_class = kwargs.get('symbol_list_class', SymbolList)  # type: Type[SymbolList]
         self.all_case_insensitive = kwargs.get('all_case_insensitive', False)  # type: bool

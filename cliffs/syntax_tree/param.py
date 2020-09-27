@@ -44,7 +44,7 @@ class Parameter(Leaf):
 
     def _match_call(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
         if len(tokens) < 1:
-            raise CallMatchFail(f'Expected argument for parameter <{self.name}>')
+            raise CallMatchFail(f"Expected argument for parameter <{self.name}>")
 
         # Type construction
         if self.typename is not None:
@@ -52,13 +52,13 @@ class Parameter(Leaf):
             try:
                 value = typ(tokens[0].value)
             except ValueError:
-                raise CallMatchFail(f"Argument {tokens[0]} for parameter <{self.name}> \
-does not match type {self.typename}")
+                raise CallMatchFail(f"Argument {tokens[0]} for parameter <{self.name}> "
+                                    f"does not match type {self.typename}")
 
         # Type defaults to string
         else:
             value = tokens[0].value
 
         match.score += 0.5
-        match.params[self.name] = value
+        match[self.name] = value
         return tokens[1:]
