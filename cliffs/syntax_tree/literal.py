@@ -1,6 +1,4 @@
-from typing import List
 from .node import Leaf
-from ..token import Token
 from ..call_match import *
 from ..call_matcher import CallMatcher
 
@@ -36,16 +34,16 @@ class Literal(Leaf):
     def __repr__(self) -> str:
         return f'literal {repr(self.value)}'
 
-    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        tokens = super().match(tokens, matcher, match)
+    def match(self, match: CallMatch, matcher: CallMatcher):
+        super().match(match, matcher)
 
-        if len(tokens) < 1:
-            raise CallMatchFail(f"Expected literal '{self.value}'")
-        if not self.compare(tokens[0].value):
-            raise CallMatchFail(f"Expected literal '{self.value}', got {tokens[0]}")
+        if not match.has_tokens():
+            raise CallMatchFail(f"Expected literal {repr(self.value)}")
+        if not self.compare(match.tokens[0].value):
+            raise CallMatchFail(f"Expected literal {repr(self.value)}, got {match.tokens[0]}")
 
         match.score += 1
-        return tokens[1:]
+        match.take_tokens(1)
 
     def compare(self, string: str) -> bool:
         """Checks if the given string matches this literal."""

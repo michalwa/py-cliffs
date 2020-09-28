@@ -1,7 +1,5 @@
-from typing import List
 from .node import Node
 from .identifiable import Identifiable
-from ..token import Token
 from ..call_match import *
 from ..call_matcher import CallMatcher
 
@@ -19,40 +17,28 @@ class OptionalSequence(Identifiable, Node):
         children = ' '.join(str(child) for child in self.children)
         return f"[{children}]"
 
-    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        tokens = super().match(tokens, matcher, match)
+    def match(self, match: CallMatch, matcher: CallMatcher):
+        super().match(match, matcher)
 
-        tokens_temp = tokens
-        match_temp = match.branch()
+        fork = match.fork()
 
         for child in self.children:
             try:
-                tokens_temp = child.match(tokens_temp, matcher, match_temp)
+                child.match(fork, matcher)
 
-            except CallMatchFail as f:
-
-                # NOTE (FIXME): This causes some issues if there are multiple sibling optional
-                # sequences starting with the same literal or with other nodes that match the same
-                # token, but I have no better idea how to implement this at the moment.
-
-                # TODO: Maybe check unmatched optional sequences from "above"?
-
-                # If some tokens matched, raise fail
-                if match_temp.score > 0:
-                    match.join(match_temp)
-                    raise f
-
+            except CallMatchFail as fail:
                 if self.identifier is not None:
                     match[self.identifier] = False
                 else:
                     match.add_optional(False)
 
-                return tokens
+                match.score += fork.score
+                match.hint = str(fail)
+                return
 
         if self.identifier is not None:
             match[self.identifier] = True
         else:
             match.add_optional(True)
 
-        match.join(match_temp)
-        return tokens_temp
+        match += fork

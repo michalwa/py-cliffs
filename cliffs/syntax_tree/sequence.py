@@ -33,12 +33,11 @@ class Sequence(Node):
 
             return new
 
-    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        tokens = super().match(tokens, matcher, match)
+    def match(self, match: CallMatch, matcher: CallMatcher) -> List[Token]:
+        super().match(match, matcher)
 
         for child in self.children:
-            tokens = child.match(tokens, matcher, match)
-        return tokens
+            child.match(match, matcher)
 
     def expected_info(self) -> str:
         return self.nth_child(0).expected_info()

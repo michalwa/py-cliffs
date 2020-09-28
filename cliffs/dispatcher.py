@@ -120,7 +120,7 @@ class CommandDispatcher:
 
         # Collect matches and fails from commands
         for command in self._commands:
-            match = CallMatch(call)
+            match = command.begin_match(call)
 
             try:
                 command.match(call, match)

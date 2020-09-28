@@ -28,16 +28,17 @@ class Tail(Leaf):
     def __repr__(self) -> str:
         return f'tail {repr(self.name)}'
 
-    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        tokens = super().match(tokens, matcher, match)
+    def match(self, match: CallMatch, matcher: CallMatcher):
+        super().match(match, matcher)
 
-        if len(tokens) == 0:
+        if not match.has_tokens():
             raise CallMatchFail(f"Expected {self.name}...")
+
         else:
-            text = match.raw[tokens[0].start:tokens[-1].end]
+            text = match.raw[match.tokens[0].start:match.tokens[-1].end]
             if text == '':
                 raise CallMatchFail(f"Expected {self.name}...")
+
             match[self.name] = text
 
-        match.terminated = True  # Disallow further elements to be matched
-        return []
+        match.terminate()

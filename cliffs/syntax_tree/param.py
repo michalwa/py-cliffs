@@ -43,24 +43,24 @@ class Parameter(Leaf):
     def __repr__(self) -> str:
         return f'param {repr(self.name)}'
 
-    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        tokens = super().match(tokens, matcher, match)
+    def match(self, match: CallMatch, matcher: CallMatcher):
+        super().match(match, matcher)
 
-        if len(tokens) < 1:
+        if not match.has_tokens():
             raise CallMatchFail(f"Expected argument for parameter <{self.name}>")
 
         # Type construction
         if self.typename is not None:
             try:
-                value = matcher.parse_arg(self.typename, tokens[0].value)
+                value = matcher.parse_arg(self.typename, match.tokens[0].value)
             except ValueError:
-                raise CallMatchFail(f"Argument {tokens[0]} for parameter <{self.name}> "
+                raise CallMatchFail(f"Argument {match.tokens[0]} for parameter <{self.name}> "
                                     f"does not match type {self.typename}")
 
         # Type defaults to string
         else:
-            value = tokens[0].value
+            value = match.tokens[0].value
 
-        match.score += 0.5
         match[self.name] = value
-        return tokens[1:]
+        match.score += 0.5
+        match.take_tokens(1)

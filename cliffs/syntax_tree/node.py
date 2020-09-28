@@ -1,6 +1,5 @@
 import inspect
 from typing import List, Optional
-from ..token import Token
 from ..call_match import CallMatch
 from ..call_matcher import CallMatcher
 
@@ -82,24 +81,29 @@ class Node:
 
         return new
 
-    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        """Tries to parse the given call tokens into the given match instance.
+    def match(self, match: CallMatch, matcher: CallMatcher):
+        """Tries to match the leftover tokens in the given match against the syntax
+        of this node. The passed match is mutated for this purpose - results
+        are appended, score is incremented, etc. and tokens are removed off the
+        start of the list.
 
         Parameters
         ----------
-          * tokens: `List[Token]` - The tokens to parse.
-          * matcher: `CallMatcher` - The matcher to use.
-          * match: `CallMatch` - The match to populate.
+          * match: `CallMatch` - The match to continue.
+          * matcher: `CallMatcher` - The matcher providing context for the match.
 
         Returns
         -------
-          * `List[Token]`: The tokens left for further matching by other nodes.
+          * `CallMatch`: The resulting match.
+
+        Raises
+        ------
+          * `SyntaxError` when matching fails because of malformed command syntax.
+          * `CallMatchFail` when matching fails and should be terminated.
         """
 
         if match.terminated:
-            raise SyntaxError(f"Tried matching {self.node_name} after matching was terminated")
-
-        return tokens
+            raise SyntaxError(f"Tried matching {self.node_name} after match was terminated")
 
     def expected_info(self) -> str:
         return str(self)

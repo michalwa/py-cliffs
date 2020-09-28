@@ -3,7 +3,7 @@ from inspect import signature
 from .utils import instance_or_kwargs
 from .syntax_tree import Node as SyntaxNode
 from .call_lexer import CallLexer
-from .call_match import CallMatch, CallMatchFail
+from .call_match import *
 from .call_matcher import CallMatcher
 import textwrap
 
@@ -34,6 +34,9 @@ class Command:
         self.description = kwargs.get('description', None)  # type: Optional[str]
         self.hidden = kwargs.get('hidden', False)  # type: bool
 
+    def begin_match(self, call: str) -> CallMatch:
+        return CallMatch(call, list(self.lexer.tokenize(call)))
+
     def match(self, call: str, match: CallMatch):
         """Tries to match the given call to this command's syntax and populates
         the given match instance.
@@ -49,10 +52,16 @@ class Command:
             exhausted at the end of the match.
         """
 
-        match.tokens = list(self.lexer.tokenize(call))
+        self.syntax.match(match, self.matcher)
 
-        left = self.syntax.match(match.tokens, self.matcher, match)
-        if len(left) > 0:
+        if match.has_tokens():
+
+            # Tokens were left in the match, which means some nodes possibly
+            # didn't match - we look for a hint in the match and raise it if it exists
+            if match.hint is not None:
+                raise CallMatchFail(match.hint)  # TODO
+
+            # Or we raise the generic error
             raise CallMatchFail('Too many arguments')
 
     def execute(self, match: CallMatch, callback_args={}) -> object:

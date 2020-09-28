@@ -72,30 +72,30 @@ class VariantGroup(Identifiable, Node):
 
             return flat
 
-    def match(self, tokens: List[Token], matcher: CallMatcher, match: CallMatch) -> List[Token]:
-        tokens = super().match(tokens, matcher, match)
+    def match(self, match: CallMatch, matcher: CallMatcher):
+        super().match(match, matcher)
 
-        matches = []  # type: List[Tuple[int, CallMatch, List[Token]]]
+        matches = []  # type: List[Tuple[int, CallMatch]]
         fails = []  # type: List[Tuple[CallMatchFail, int]]
 
         # Iterate through variants collecting:
-        # - matches in tuples: (index, match, leftover_tokens)
+        # - matches in tuples: (index, match)
         # - non-0-scoring fails (CallMatchFail) in tuples: (fail, score)
         for index, variant in enumerate(self.children):
-            submatch = match.branch()
+            fork = match.fork()
 
             try:
-                left_tokens = variant.match(tokens, matcher, submatch)
-                matches.append((index, submatch, left_tokens))
+                variant.match(fork, matcher)
+                matches.append((index, fork))
 
             except CallMatchFail as fail:
-                if submatch.score > 0:
-                    fails.append((fail, submatch.score))
+                if fork.score > 0:
+                    fails.append((fail, fork.score))
 
         # If a best match exists...
         if matches != []:
             # ...find it...
-            best_index, best_match, best_tokens = best(matches, lambda m: m[1].score)
+            best_index, best_match = best(matches, lambda m: m[1].score)
 
             # ...append its index to the match...
             if self.identifier is not None:
@@ -104,8 +104,7 @@ class VariantGroup(Identifiable, Node):
                 best_match.add_variant(best_index)
 
             # ...update the super-match and return leftover tokens
-            match.join(best_match)
-            return best_tokens
+            match += best_match
 
         # If the best fail exists, raise it
         elif fails != []:
@@ -114,8 +113,8 @@ class VariantGroup(Identifiable, Node):
             raise best_fail
 
         # Raise the default fail otherwise
-        elif tokens != []:
-            raise CallMatchFail(f"Expected {self.expected_info()}, got {tokens[0]}")
+        elif match.tokens != []:
+            raise CallMatchFail(f"Expected {self.expected_info()}, got {match.tokens[0]}")
         else:
             raise CallMatchFail(f"Expected {self.expected_info()}")
 

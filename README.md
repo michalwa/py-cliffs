@@ -32,7 +32,7 @@ method calls for constructing command parsers, as it is usually done in librarie
 To demonstrate the concept of how **Clifford** works, consider this simple command syntax
 specification:
 
-    set [loud] alarm at <hour> [am|pm] [every <days>] [saying <message>]
+    set [loud] alarm at <hour: int> [am|pm] [every <days>] [saying <message>]
 
 Such defined syntax accepts the following command calls:
 
@@ -50,11 +50,11 @@ Such defined syntax accepts the following command calls:
         vars = [1]
         params = {'hour': 2, 'days': 'monday', 'message': 'Hello, world!'}
 
-And will reject the following:
+And will reject the following with appropriate info:
 
-    set alarm
-    set loud alarm at
-    set alarm at pm
+    set alarm          (Expected literal 'at')
+    set loud alarm at  (Expected argument for parameter <hour>)
+    set alarm at pm    (Argument 'pm' for parameter <hour> does not match type int)
     ...
 
 For more syntax features and implementation details check out the [example](example.py).
