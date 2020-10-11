@@ -1,7 +1,7 @@
 from typing import Optional, Callable, Iterable
 from inspect import signature
 from .utils import instance_or_kwargs
-from .syntax_tree import Node as SyntaxNode
+from .syntax_tree import Node
 from .call_lexer import CallLexer
 from .call_match import *
 from .call_matcher import CallMatcher
@@ -15,12 +15,12 @@ class TooManyArguments(CallMatchFail):
 class Command:
     """Matches command calls against its syntax and controls callback dispatch."""
 
-    def __init__(self, syntax: SyntaxNode, callback: Callable, **kwargs):
+    def __init__(self, syntax: Node, callback: Callable, **kwargs):
         """Initializes a command.
 
         Parameters
         ----------
-          * syntax: `StNode` - The root of the syntax tree for this command.
+          * syntax: `Node` - The root of the syntax tree for this command.
           * callback: `(...) -> *` - The callback.
 
         Keyword arguments
