@@ -75,8 +75,8 @@ class VariantGroup(Identifiable, Node):
     def match(self, match: CallMatch, matcher: CallMatcher):
         super().match(match, matcher)
 
-        matches = []  # type: List[Tuple[int, CallMatch]]
-        fails = []  # type: List[Tuple[CallMatchFail, int]]
+        matches: List[Tuple[int, CallMatch]] = []
+        fails: List[Tuple[CallMatchFail, int]] = []
 
         # Iterate through variants collecting:
         # - matches in tuples: (index, match)

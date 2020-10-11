@@ -64,8 +64,8 @@ class SyntaxParser:
 
         self.lexer = instance_or_kwargs(kwargs.get('lexer', {}), SyntaxLexer)
 
-        self.symbol_list_class = kwargs.get('symbol_list_class', SymbolList)  # type: Type[SymbolList]
-        self.all_case_insensitive = kwargs.get('all_case_insensitive', False)  # type: bool
+        self.symbol_list_class: Type[SymbolList] = kwargs.get('symbol_list_class', SymbolList)
+        self.all_case_insensitive: bool = kwargs.get('all_case_insensitive', False)
 
     def parse(self, string: str) -> Node:
         """Parses the given sequence of tokens into a syntax tree.
@@ -86,7 +86,7 @@ class SyntaxParser:
         tokens = self.lexer.tokenize(string)
 
         root = Sequence()
-        current = root  # type: Node
+        current: Node = root
 
         symbols = self.symbol_list_class()
 
@@ -286,7 +286,7 @@ class SyntaxParser:
                 if state != 'NORMAL':
                     raise SyntaxError(f"Unexpected {token}")
 
-                child = OptionalSequence()  # type: StNode
+                child: StNode = OptionalSequence()
                 current.append_child(child)
                 current = child
 

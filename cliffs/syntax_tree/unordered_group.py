@@ -30,8 +30,8 @@ class UnorderedGroup(Node):
 
         # Try to find a matching order until the unused children are exhausted
         while unused != []:
-            matches = []  # type: List[Tuple[Node, CallMatch]]
-            fails = []  # type: List[Tuple[CallMatchFail, int]]
+            matches: List[Tuple[Node, CallMatch]] = []
+            fails: List[Tuple[CallMatchFail, int]] = []
 
             # Collect matches from all unused children
             for child in unused:

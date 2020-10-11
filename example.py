@@ -39,10 +39,10 @@ def command_set_alarm(match: CallMatch):
     # Check whether optional sequence is present
     loud = match.optional(0)
     # Retrieve parameter values
-    time = match['time']  # type: struct_time
-    message = match['message'] if match.optional(1) else None  # type: Optional[str]
+    time = match['time']
+    message = match['message'] if match.optional(1) else None
     # Get variant index
-    am_pm = ['am', 'pm'][match.variant(0)]  # type: str
+    am_pm = ['am', 'pm'][match.variant(0)]
 
     # Print something out
     t = 'Setting ' + ('a loud ' if loud else 'an ') + 'alarm at ' + strftime('%I:%M', time) + ' ' + am_pm.upper()

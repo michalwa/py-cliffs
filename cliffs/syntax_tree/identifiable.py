@@ -6,7 +6,7 @@ class Identifiable:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.identifier = None  # type: Optional[str]
+        self.identifier: Optional[str] = None
 
     def flattened(self):
         flat = super().flattened()

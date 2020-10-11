@@ -10,8 +10,8 @@ class Node:
     node_name = 'node'
 
     def __init__(self):
-        self.parent = None  # type: Optional[Node]
-        self.children = []  # type: List[Node]
+        self.parent: Optional[Node] = None
+        self.children: List[Node] = []
 
     def __repr__(self) -> str:
         r = f'{self.node_name}'

@@ -12,7 +12,7 @@ class CallMatcher:
     def __init__(self):
         """Initializes a matcher"""
 
-        self._types = {}  # type: Dict[str, Callable[[str], Any]]
+        self._types: Dict[str, Callable[[str], Any]] = {}
 
         self.register_type(str)
         self.register_type(int)

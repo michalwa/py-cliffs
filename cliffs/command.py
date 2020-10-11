@@ -31,8 +31,8 @@ class Command:
         self.callback = callback
         self.lexer = instance_or_kwargs(kwargs.get('lexer', {}), CallLexer)
         self.matcher = instance_or_kwargs(kwargs.get('matcher', {}), CallMatcher)
-        self.description = kwargs.get('description', None)  # type: Optional[str]
-        self.hidden = kwargs.get('hidden', False)  # type: bool
+        self.description: Optional[str] = kwargs.get('description', None)
+        self.hidden: Optional[str] = kwargs.get('hidden', False)
 
     def begin_match(self, call: str) -> CallMatch:
         return CallMatch(call, list(self.lexer.tokenize(call)))

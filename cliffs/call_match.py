@@ -26,19 +26,19 @@ class CallMatch:
         # The raw command issued passed to the top-level match
         self.raw = raw
         # The tokens left to be matched
-        self.tokens = tokens  # type: List[Token]
+        self.tokens: List[Token] = tokens
         # The score for this match branch
         self.score = 0
         # Whether to prevent further matches from being performed under this match
         self.terminated = False
         # Matched and parsed parameters
-        self._params = {}  # type: Dict[str, Any]
+        self._params: Dict[str, Any] = {}
         # Optional sequence matches
-        self._opts = []  # type: List[bool]
+        self._opts: List[bool] = []
         # Variant group matches
-        self._vars = []  # type: List[int]
-
-        self.hint = None  # type: Optional[str]
+        self._vars: List[int] = []
+        # Error hint
+        self.hint: Optional[str] = None
 
     def __repr__(self) -> str:
         return f'<CallMatch params={self._params}, optionals={self._opts}, variants={self._vars}>'
