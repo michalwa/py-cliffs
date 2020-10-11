@@ -1,8 +1,12 @@
-from typing import List
 from .node import Leaf
-from ..token import Token
 from ..call_match import *
 from ..call_matcher import CallMatcher
+
+
+class MissingTail(CallMatchFail):
+    def __init__(self, expected: 'Tail'):
+        super().__init__(f"Expected {expected.name}...")
+        self.expected = expected
 
 
 class Tail(Leaf):
@@ -32,12 +36,12 @@ class Tail(Leaf):
         super().match(match, matcher)
 
         if not match.has_tokens():
-            raise CallMatchFail(f"Expected {self.name}...")
+            raise MissingTail(self)
 
         else:
             text = match.raw[match.tokens[0].start:match.tokens[-1].end]
             if text == '':
-                raise CallMatchFail(f"Expected {self.name}...")
+                raise MissingTail(self)
 
             match[self.name] = text
 

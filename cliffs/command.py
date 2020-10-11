@@ -8,6 +8,10 @@ from .call_matcher import CallMatcher
 import textwrap
 
 
+class TooManyArguments(CallMatchFail):
+    pass
+
+
 class Command:
     """Matches command calls against its syntax and controls callback dispatch."""
 
@@ -59,10 +63,10 @@ class Command:
             # Tokens were left in the match, which means some nodes possibly
             # didn't match - we look for a hint in the match and raise it if it exists
             if match.hint is not None:
-                raise CallMatchFail(match.hint)  # TODO
+                raise match.hint
 
             # Or we raise the generic error
-            raise CallMatchFail('Too many arguments')
+            raise TooManyArguments('Too many arguments')
 
     def execute(self, match: CallMatch, callback_args={}) -> object:
         """Executes the command callback with the given match. By default,

@@ -2,7 +2,7 @@ import sys
 import logging
 from typing import Optional
 from datetime import datetime
-from time import struct_time, strptime, strftime
+from time import strptime, strftime
 from cliffs import *
 
 
@@ -77,7 +77,7 @@ def command_scream(match: CallMatch, what: Optional[str] = None):
 # Note that if you assign an identifier to a group, its state won't be present in the
 # index-based array (`opts` or `vars`).
 # These identifiers will not be displayed in the usage help.
-@cli.command("i [don't]:negation like (bread|cheese):food")
+@cli.command("i [dont]:negation like (bread|cheese):food")
 def command_like_bread(negation: bool, food: int):
     food_name = ['bread', 'cheese'][food]
     if not negation:

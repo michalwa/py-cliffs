@@ -38,7 +38,7 @@ class CallMatch:
         # Variant group matches
         self._vars: List[int] = []
         # Error hint
-        self.hint: Optional[str] = None
+        self.hint: Optional[Exception] = None
 
     def __repr__(self) -> str:
         return f'<CallMatch params={self._params}, optionals={self._opts}, variants={self._vars}>'

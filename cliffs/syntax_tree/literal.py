@@ -1,6 +1,20 @@
 from .node import Leaf
 from ..call_match import *
 from ..call_matcher import CallMatcher
+from ..token import Token
+
+
+class MissingLiteral(CallMatchFail):
+    def __init__(self, expected: 'Literal'):
+        super().__init__(f"Expected literal {repr(expected.value)}")
+        self.expected = expected
+
+
+class MismatchedLiteral(CallMatchFail):
+    def __init__(self, expected: 'Literal', actual: Token):
+        super().__init__(f"Expected literal {repr(expected.value)}, got {actual}")
+        self.expected = expected
+        self.actual = actual
 
 
 class Literal(Leaf):
@@ -38,9 +52,9 @@ class Literal(Leaf):
         super().match(match, matcher)
 
         if not match.has_tokens():
-            raise CallMatchFail(f"Expected literal {repr(self.value)}")
+            raise MissingLiteral(self)
         if not self.compare(match.tokens[0].value):
-            raise CallMatchFail(f"Expected literal {repr(self.value)}, got {match.tokens[0]}")
+            raise MismatchedLiteral(self, match.tokens[0])
 
         match.score += 1
         match.take_tokens(1)
@@ -54,4 +68,4 @@ class Literal(Leaf):
             return self.value.lower() == string.lower()
 
     def expected_info(self) -> str:
-        return f"'{self.value}'"
+        return repr(self.value)

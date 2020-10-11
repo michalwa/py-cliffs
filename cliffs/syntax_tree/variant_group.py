@@ -2,10 +2,22 @@ from typing import List, Tuple
 from .node import Node
 from .identifiable import Identifiable
 from .sequence import Sequence
-from ..token import Token
 from ..utils import best
 from ..call_match import *
 from ..call_matcher import CallMatcher
+
+
+class MissingVariant(CallMatchFail):
+    def __init__(self, expected: 'VariantGroup'):
+        super().__init__(f"Expected {expected.expected_info()}")
+        self.expected = expected
+
+
+class NoMatchedVariant(CallMatchFail):
+    def __init__(self, expected: 'VariantGroup', actual: Token):
+        super().__init__(f"Expected {expected.expected_info()}, got {actual}")
+        self.expected = expected
+        self.actual = actual
 
 
 class VariantGroup(Identifiable, Node):
@@ -114,9 +126,9 @@ class VariantGroup(Identifiable, Node):
 
         # Raise the default fail otherwise
         elif match.tokens != []:
-            raise CallMatchFail(f"Expected {self.expected_info()}, got {match.tokens[0]}")
+            raise NoMatchedVariant(self, match.tokens[0])
         else:
-            raise CallMatchFail(f"Expected {self.expected_info()}")
+            raise MissingVariant(self)
 
     def expected_info(self) -> str:
         return ' or '.join(set(variant.expected_info() for variant in self.children))

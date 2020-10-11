@@ -1,8 +1,22 @@
-from typing import List, Optional
+from typing import Optional
 from .node import Leaf
-from ..token import Token
 from ..call_match import *
 from ..call_matcher import CallMatcher
+from ..token import Token
+
+
+class MissingParameter(CallMatchFail):
+    def __init__(self, expected: 'Parameter'):
+        super().__init__(f"Expected argument for parameter <{expected.name}>")
+        self.expected = expected
+
+
+class MismatchedParameterType(CallMatchFail):
+    def __init__(self, expected: 'Parameter', actual: Token):
+        super().__init__(f"Argument {actual} for parameter <{expected.name}> "
+                         f"does not match type {expected.typename}")
+        self.expected = expected
+        self.actual = actual
 
 
 class Parameter(Leaf):
@@ -47,15 +61,14 @@ class Parameter(Leaf):
         super().match(match, matcher)
 
         if not match.has_tokens():
-            raise CallMatchFail(f"Expected argument for parameter <{self.name}>")
+            raise MissingParameter(self)
 
         # Type construction
         if self.typename is not None:
             try:
                 value = matcher.parse_arg(self.typename, match.tokens[0].value)
             except ValueError:
-                raise CallMatchFail(f"Argument {match.tokens[0]} for parameter <{self.name}> "
-                                    f"does not match type {self.typename}")
+                raise MismatchedParameterType(self, match.tokens[0])
 
         # Type defaults to string
         else:

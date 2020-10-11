@@ -33,7 +33,7 @@ class OptionalSequence(Identifiable, Node):
                     match.add_optional(False)
 
                 match.score += fork.score
-                match.hint = str(fail)
+                match.hint = fail
                 return
 
         if self.identifier is not None:

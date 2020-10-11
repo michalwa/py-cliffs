@@ -1,9 +1,22 @@
 from typing import List, Tuple
 from .node import Node
-from ..token import Token
 from ..utils import best
 from ..call_match import *
 from ..call_matcher import CallMatcher
+from ..token import Token
+
+
+class MissingUnorderedGroup(CallMatchFail):
+    def __init__(self, expected: 'UnorderedGroup'):
+        super().__init__(f"Expected {expected.expected_info()}")
+        self.expected = expected
+
+
+class UnmatchedUnorderedGroup(CallMatchFail):
+    def __init__(self, expected: 'UnorderedGroup', actual: Token):
+        super().__init__(f"Expected {expected.expected_info()}, got {actual}")
+        self.expected = expected
+        self.actual = actual
 
 
 class UnorderedGroup(Node):
@@ -40,8 +53,7 @@ class UnorderedGroup(Node):
                     child.match(fork, matcher)
                     matches.append((child, fork))
                 except CallMatchFail as fail:
-                    if fork.score > 0:
-                        fails.append((fail, fork.score))
+                    fails.append((fail, fork.score))
 
             # Find the best and append it to the global list
             if matches != []:
@@ -57,11 +69,11 @@ class UnorderedGroup(Node):
 
             # If there is no appropriate fail to raise, raise a generic fail
             else:
-                expected_info = ' or '.join(set(child.expected_info() for child in unused))
+                # TODO: Throw subclassed exception
                 if match.tokens != []:
-                    raise CallMatchFail(f"Expected {expected_info}, got {match.tokens[0]}")
+                    raise UnmatchedUnorderedGroup(self, match.tokens[0])
                 else:
-                    raise CallMatchFail(f"Expected {expected_info}")
+                    raise MissingUnorderedGroup(self)
 
     def expected_info(self) -> str:
         return ' or '.join(set(child.expected_info() for child in self.children))
