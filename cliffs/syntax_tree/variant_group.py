@@ -1,4 +1,3 @@
-from typing import List, Tuple
 from .node import Node
 from .identifiable import Identifiable
 from .sequence import Sequence
@@ -87,8 +86,8 @@ class VariantGroup(Identifiable, Node):
     def match(self, match: CallMatch, matcher: CallMatcher):
         super().match(match, matcher)
 
-        matches: List[Tuple[int, CallMatch]] = []
-        fails: List[Tuple[CallMatchFail, int]] = []
+        matches: list[tuple[int, CallMatch]] = []
+        fails: list[tuple[CallMatchFail, int]] = []
 
         # Iterate through variants collecting:
         # - matches in tuples: (index, match)

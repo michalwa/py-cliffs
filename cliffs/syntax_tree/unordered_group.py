@@ -1,4 +1,3 @@
-from typing import List, Tuple
 from .node import Node
 from ..utils import best
 from ..call_match import *
@@ -43,8 +42,8 @@ class UnorderedGroup(Node):
 
         # Try to find a matching order until the unused children are exhausted
         while unused != []:
-            matches: List[Tuple[Node, CallMatch]] = []
-            fails: List[Tuple[CallMatchFail, int]] = []
+            matches: list[tuple[Node, CallMatch]] = []
+            fails: list[tuple[CallMatchFail, int]] = []
 
             # Collect matches from all unused children
             for child in unused:
