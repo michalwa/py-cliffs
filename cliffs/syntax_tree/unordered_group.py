@@ -69,7 +69,6 @@ class UnorderedGroup(Node):
 
             # If there is no appropriate fail to raise, raise a generic fail
             else:
-                # TODO: Throw subclassed exception
                 if match.tokens != []:
                     raise UnmatchedUnorderedGroup(self, match.tokens[0])
                 else:
