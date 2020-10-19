@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Callable, Optional
 from .utils import loose_bool
 
 
@@ -12,7 +12,7 @@ class CallMatcher:
     def __init__(self):
         """Initializes a matcher"""
 
-        self._types: Dict[str, Callable[[str], Any]] = {}
+        self._types: dict[str, Callable[[str], Any]] = {}
 
         self.register_type(str)
         self.register_type(int)

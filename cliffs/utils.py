@@ -1,4 +1,4 @@
-from typing import TypeVar, Type, Optional, Callable, Iterable
+from typing import TypeVar, Optional, Callable, Iterable
 
 
 _T = TypeVar('_T')
@@ -92,7 +92,7 @@ def loose_bool(s: str) -> bool:
         raise ValueError(f"String {repr(s)} cannot be loosely casted to a boolean")
 
 
-def instance_or_kwargs(obj, cls: Type[_T]) -> _T:
+def instance_or_kwargs(obj, cls: type[_T]) -> _T:
     """Returns the object unchanged if it's an instance of the given class.
     Otherwise, if it is a dictionary, an instance of the given class is constructed
     with the object as keyword args to the constructor.
@@ -100,7 +100,7 @@ def instance_or_kwargs(obj, cls: Type[_T]) -> _T:
     Parameters
     ----------
       * obj - The object to cast.
-      * cls: `Type[_T]` - The class to cast to.
+      * cls: `type[_T]` - The class to cast to.
 
     Returns
     -------

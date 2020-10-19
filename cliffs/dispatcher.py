@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Iterable, List, Tuple, Optional, Type
+from typing import Any, Callable, Iterable, Optional
 from .utils import instance_or_kwargs, best
 from .call_match import CallMatch, CallMatchFail
 from .command import Command
@@ -27,13 +27,13 @@ class CommandDispatcher:
           * parser: `SyntaxParser` or `dict` - The syntax parser to use to parse the syntax for new commands.
           * call_lexer: `CallLexer` or `dict` - The lexer to pass to new commands for tokenizing calls.
           * matcher: `CallMatcher` or `dict` - The matcher to pass to new commands for matching calls.
-          * command_class: `Type[Command]` - The class to construct for new commands.
+          * command_class: `type[Command]` - The class to construct for new commands.
         """
 
         self.parser = instance_or_kwargs(kwargs.get('parser', {}), SyntaxParser)
-        self.command_class: Type[Command] = kwargs.get('command_class', Command)
+        self.command_class: type[Command] = kwargs.get('command_class', Command)
 
-        self._commands: List[Command] = []
+        self._commands: list[Command] = []
 
         # Kwargs to be passed to commands constructed with @command
         self._command_kwargs = {}
@@ -75,7 +75,7 @@ class CommandDispatcher:
         parser = instance_or_kwargs(kwargs.get('parser', self.parser), SyntaxParser)
 
         syntax_root = parser.parse(syntax)
-        command_class: Type[Command] = kwargs.pop('command_class', self.command_class)
+        command_class: type[Command] = kwargs.pop('command_class', self.command_class)
 
         def decorator(f: Callable) -> Command:
             for k, v in self._command_kwargs.items():
@@ -115,8 +115,8 @@ class CommandDispatcher:
             based on the tokens of the call.
         """
 
-        matches: List[Tuple[CallMatch, Command]] = []
-        fails: List[Tuple[CallMatchFail, int]] = []
+        matches: list[tuple[CallMatch, Command]] = []
+        fails: list[tuple[CallMatchFail, int]] = []
 
         # Collect matches and fails from commands
         for command in self._commands:

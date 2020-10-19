@@ -1,4 +1,4 @@
-from typing import Any, List, Dict, Optional
+from typing import Any, Optional
 from .token import Token
 
 
@@ -13,30 +13,30 @@ class CallMatch:
     """Stores the result of a command call matched entirely or partially
     against a command syntax."""
 
-    def __init__(self, raw: str, tokens: List[Token]):
+    def __init__(self, raw: str, tokens: list[Token]):
         """Constructs a call match to be populated by the syntax tree recursive
         parsers.
 
         Parameters
         ----------
           * raw: `str` - The raw command issued.
-          * tokens: `List[Token]` - The tokens left to be matched.
+          * tokens: `list[Token]` - The tokens left to be matched.
         """
 
         # The raw command issued passed to the top-level match
         self.raw = raw
         # The tokens left to be matched
-        self.tokens: List[Token] = tokens
+        self.tokens: list[Token] = tokens
         # The score for this match branch
-        self.score = 0
+        self.score = 0.
         # Whether to prevent further matches from being performed under this match
         self.terminated = False
         # Matched and parsed parameters
-        self._params: Dict[str, Any] = {}
+        self._params: dict[str, Any] = {}
         # Optional sequence matches
-        self._opts: List[bool] = []
+        self._opts: list[bool] = []
         # Variant group matches
-        self._vars: List[int] = []
+        self._vars: list[int] = []
         # Error hint
         self.hint: Optional[Exception] = None
 
@@ -67,7 +67,7 @@ class CallMatch:
         the specified number."""
         return len(self.tokens) >= num
 
-    def take_tokens(self, num: int) -> List[Token]:
+    def take_tokens(self, num: int) -> list[Token]:
         """Removes a specified number of tokens from the start of the token list
         and return them
 

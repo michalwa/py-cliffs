@@ -42,8 +42,11 @@ class CallLexer:
             return Token(None, current, current_start, end)
 
         def quoted_token(end: int):
+            if quote is None:
+                raise RuntimeError("Something went horribly wrong")
             return Token(None, quote + current + quote, current_start, end, value=current)
 
+        i = 0
         for i, c in enumerate(cmd):
 
             if c.isspace() and quote is None:

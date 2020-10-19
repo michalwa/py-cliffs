@@ -1,5 +1,5 @@
 import inspect
-from typing import List, Optional
+from typing import Optional
 from ..call_match import CallMatch
 from ..call_matcher import CallMatcher
 
@@ -11,7 +11,7 @@ class Node:
 
     def __init__(self):
         self.parent: Optional[Node] = None
-        self.children: List[Node] = []
+        self.children: list[Node] = []
 
     def __repr__(self) -> str:
         r = f'{self.node_name}'

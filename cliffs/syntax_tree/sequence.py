@@ -1,6 +1,4 @@
-from typing import List
 from .node import Node
-from ..token import Token
 from ..call_match import CallMatch
 from ..call_matcher import CallMatcher
 
@@ -18,7 +16,7 @@ class Sequence(Node):
         s = ' '.join(str(child) for child in self.children)
         return f'({s})' if self.parent is not None else s
 
-    def flattened(self) -> str:
+    def flattened(self) -> Node:
         if self.num_children == 1:
             return self.nth_child(0).flattened()
         else:
@@ -33,7 +31,7 @@ class Sequence(Node):
 
             return new
 
-    def match(self, match: CallMatch, matcher: CallMatcher) -> List[Token]:
+    def match(self, match: CallMatch, matcher: CallMatcher):
         super().match(match, matcher)
 
         for child in self.children:

@@ -1,6 +1,6 @@
 # cliffs
 This is an implementation of [Clifford](https://github.com/michalwa/Clifford)
-(originally written in Java) for Python 3 (tested in 3.8.3).
+(originally written in Java) for Python 3.9.
 Although this implementation has much more functionality,
 it's still compliant with the original concept.
 
