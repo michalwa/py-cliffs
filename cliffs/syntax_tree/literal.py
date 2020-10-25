@@ -1,3 +1,4 @@
+from difflib import SequenceMatcher
 from .node import Leaf
 from ..call_match import *
 from ..call_matcher import CallMatcher
@@ -11,8 +12,13 @@ class MissingLiteral(CallMatchFail):
 
 
 class MismatchedLiteral(CallMatchFail):
-    def __init__(self, expected: 'Literal', actual: Token):
-        super().__init__(f"Expected literal {repr(expected.value)}, got {actual}")
+    def __init__(self, expected: 'Literal', actual: Token, suggest: bool = False):
+        if suggest:
+            super().__init__(f"Probably meant {repr(expected.value)}, got {actual}")
+        else:
+            super().__init__(f"Expected literal {repr(expected.value)}, got {actual}")
+
+        self.suggest = suggest
         self.expected = expected
         self.actual = actual
 
@@ -53,19 +59,29 @@ class Literal(Leaf):
 
         if not match.has_tokens():
             raise MissingLiteral(self)
-        if not self.compare(match.tokens[0].value):
-            raise MismatchedLiteral(self, match.tokens[0])
+
+        ratio = self.compare(match.tokens[0].value)
+
+        if ratio != 1.0:
+            if ratio >= matcher.literal_threshold:
+                match.score += 0.25
+                raise MismatchedLiteral(self, match.tokens[0], True)
+            else:
+                raise MismatchedLiteral(self, match.tokens[0])
 
         match.score += 1
         match.take_tokens(1)
 
-    def compare(self, string: str) -> bool:
-        """Checks if the given string matches this literal."""
+    def compare(self, string: str) -> float:
+        """
+        Returns a similarity metric (0.0 - 1.0) based on how similar the value
+        of this literal is to the given string.
+        """
 
-        if self.case_sensitive:
-            return self.value == string
+        if self.value == string:
+            return 1.0
         else:
-            return self.value.lower() == string.lower()
+            return SequenceMatcher(None, self.value, string).ratio()
 
     def expected_info(self) -> str:
         return repr(self.value)

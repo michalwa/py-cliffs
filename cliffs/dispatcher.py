@@ -123,7 +123,7 @@ class CommandDispatcher:
             match = command.begin_match(call)
 
             try:
-                command.match(call, match)
+                command.match(match)
                 matches.append((match, command))
 
             except CallMatchFail as fail:

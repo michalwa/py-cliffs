@@ -41,7 +41,7 @@ class Command:
     def begin_match(self, call: str) -> CallMatch:
         return CallMatch(call, list(self.lexer.tokenize(call)))
 
-    def match(self, call: str, match: CallMatch):
+    def match(self, match: CallMatch):
         """Tries to match the given call to this command's syntax and populates
         the given match instance.
 

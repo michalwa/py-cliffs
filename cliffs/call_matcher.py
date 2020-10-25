@@ -9,8 +9,11 @@ class CallMatcher:
     are matched and manages registered parameter types.
     """
 
-    def __init__(self):
+    def __init__(self, literal_threshold: float = 0.75):
         """Initializes a matcher"""
+
+        # How similar a literal must be to a token to be hinted
+        self.literal_threshold = literal_threshold
 
         self._types: dict[str, Callable[[str], Any]] = {}
 
