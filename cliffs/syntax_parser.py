@@ -346,8 +346,6 @@ class SyntaxParser:
             else:
                 raise SyntaxError(f"Unknown token: {token}")
 
-            after_hat = False
-
         # Leave unterminated variant
         if isinstance(current, Variant):
             current = current.parent.parent

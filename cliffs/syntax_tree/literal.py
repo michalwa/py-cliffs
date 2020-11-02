@@ -12,15 +12,18 @@ class MissingLiteral(CallMatchFail):
 
 
 class MismatchedLiteral(CallMatchFail):
-    def __init__(self, expected: 'Literal', actual: Token, suggest: bool = False):
-        if suggest:
-            super().__init__(f"Probably meant {repr(expected.value)}, got {actual}")
-        else:
-            super().__init__(f"Expected literal {repr(expected.value)}, got {actual}")
+    def __init__(self, expected: 'Literal', actual: Token):
+        super().__init__(f"Expected literal {repr(expected.value)}, got {actual}")
 
-        self.suggest = suggest
         self.expected = expected
         self.actual = actual
+
+
+class MismatchedLiteralSuggestion(MismatchedLiteral):
+    def __init__(self, expected: 'Literal', actual: Token):
+        super().__init__(expected, actual)
+
+        self.args = (f"Probably meant {repr(expected.value)}, got {actual}",)
 
 
 class Literal(Leaf):
@@ -70,13 +73,13 @@ class Literal(Leaf):
 
         if ratio != 1.0:
             if ratio >= matcher.literal_threshold:
-                match.score += 0.25
+                match.score += ratio
 
                 if self.tolerant:
                     match.take_tokens(1)
                     return
 
-                raise MismatchedLiteral(self, match.tokens[0], True)
+                raise MismatchedLiteralSuggestion(self, match.tokens[0])
             else:
                 raise MismatchedLiteral(self, match.tokens[0])
 
