@@ -36,7 +36,7 @@ class SyntaxLexer:
                 current += c
 
                 # Trim off accumulated punctuation tokens
-                for punct in list('<>()[]{}:|*^') + ['...']:
+                for punct in list('<>()[]{}:|*^~') + ['...']:
                     if str(current).endswith(punct):
                         current.trim(end=-len(punct))
                         if current != '':

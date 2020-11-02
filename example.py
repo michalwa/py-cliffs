@@ -54,7 +54,7 @@ def command_set_alarm(match: CallMatch):
 # You can pass parameters directly as arguments to a callback.
 # This is actually the preferred way of setting up commands, the above example
 # was just for demonstration purposes.
-@cli.command('(eval | =) <expr...>')
+@cli.command('(eval|=) <expr...>')
 def command_eval(expr: str):
     """Evaluates a given expression."""
 
@@ -77,7 +77,7 @@ def command_scream(match: CallMatch, what: Optional[str] = None):
 # Note that if you assign an identifier to a group, its state won't be present in the
 # index-based array (`opts` or `vars`).
 # These identifiers will not be displayed in the usage help.
-@cli.command("i [dont]:negation like (bread|cheese):food")
+@cli.command('i [dont]:negation like (bread|cheese):food')
 def command_like_bread(negation: bool, food: int):
     food_name = ['bread', 'cheese'][food]
     if not negation:
@@ -118,8 +118,9 @@ def command_foo(bar = None):
     print(bar)
 
 
-# "help" will be matched case-insensitively
-@cli.command('help^')
+# "help" will be matched case-insensitively and will tolerate inaccuracies
+# below the threshold configured in the `CallMatcher` (75% by default)
+@cli.command('help^~')
 def command_help():
     """Displays this help message"""
 

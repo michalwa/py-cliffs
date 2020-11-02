@@ -93,7 +93,6 @@ class SyntaxParser:
         state = 'NORMAL'
         param_name = None
         param_type = None
-        after_hat = False
 
         for token in tokens:
 
@@ -153,13 +152,21 @@ class SyntaxParser:
 
             # Case-insensitive hat/caret
             elif token.value == '^':
-                if state != 'NORMAL' or after_hat or type(current.nth_child(-1)) is not Literal:
+                if state != 'NORMAL' or type(current.nth_child(-1)) is not Literal:
                     raise SyntaxError(f"Unexpected {token}")
 
-                # TODO: Allow suffixing groups with the hat and propagate case-sensitivity down to their children
+                # TODO: Allow modifier on groups?
 
                 current.nth_child(-1).case_sensitive = False
-                after_hat = True
+
+            # Tolerance modifier
+            elif token.value == '~':
+                if state != 'NORMAL' or type(current.nth_child(-1)) is not Literal:
+                    raise SyntaxError(f"Unexpected {token}")
+
+                # Allow modifier on groups?
+
+                current.nth_child(-1).tolerant = True
 
             # Opening parameter delimiter
             elif token.value == '<':

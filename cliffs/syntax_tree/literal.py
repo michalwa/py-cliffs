@@ -31,17 +31,23 @@ class Literal(Leaf):
 
     node_name = 'literal'
 
-    def __init__(self, value: str, *, case_sensitive: bool = True):
+    def __init__(self, value: str, *, case_sensitive: bool = True, tolerant: bool = False):
         """Initializes a literal node.
 
         Parameters
         ----------
           * value: `str` - The contents of the literal.
+          * case_sensitive: `bool` - Whether the literal should be matched respecting
+            letter case (defaults to `True`)
+          * tolerant: `bool` - Whether the literal should match successfully when
+            match ratio is below the threshold configured in the `CallMatcher`.
+            By default, a suggestive exception will be raised.
         """
 
         super().__init__()
         self.value = value
         self.case_sensitive = case_sensitive
+        self.tolerant = tolerant
 
     def __eq__(self, other) -> bool:
         return isinstance(other, self.__class__) \
@@ -65,6 +71,11 @@ class Literal(Leaf):
         if ratio != 1.0:
             if ratio >= matcher.literal_threshold:
                 match.score += 0.25
+
+                if self.tolerant:
+                    match.take_tokens(1)
+                    return
+
                 raise MismatchedLiteral(self, match.tokens[0], True)
             else:
                 raise MismatchedLiteral(self, match.tokens[0])
