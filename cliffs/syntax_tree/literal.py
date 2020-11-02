@@ -78,10 +78,16 @@ class Literal(Leaf):
         of this literal is to the given string.
         """
 
-        if self.value == string:
+        value = self.value
+
+        if not self.case_sensitive:
+            string = string.lower()
+            value = value.lower()
+
+        if value == string:
             return 1.0
         else:
-            return SequenceMatcher(None, self.value, string).ratio()
+            return SequenceMatcher(None, value, string).ratio()
 
     def expected_info(self) -> str:
         return repr(self.value)
