@@ -78,16 +78,12 @@ class CommandDispatcher:
         command_class: type[Command] = kwargs.pop('command_class', self.command_class)
 
         def decorator(f: Callable) -> Command:
-            for k, v in self._command_kwargs.items():
-                if k not in kwargs:
-                    kwargs[k] = v
-
             # Read docstring if 'description' parameter is not given
             if 'description' not in kwargs and f.__doc__ is not None:
                 # Dedent and remove leading and trailing empty lines
                 kwargs['description'] = inspect.cleandoc(f.__doc__).strip('\n')
 
-            cmd = command_class(syntax_root, f, **kwargs)
+            cmd = command_class(syntax_root, f, **self._command_kwargs | kwargs)
             self.register(cmd)
             return cmd
 

@@ -113,7 +113,8 @@ def command_exit():
 
 
 # Literals have priority over parameters
-@cli.command('foo <bar>|foo bar')
+# Arbitrary keyword arguments can be passed and stored in the `Command` object
+@cli.command('foo <bar>|foo bar', error='You screwed it up')
 def command_foo(bar = None):
     print(bar)
 
@@ -149,8 +150,11 @@ if __name__ == '__main__':
 
             # `CallMatchFail` is raised when no command fully matched the call
             # (the error from the best matched command is returned)
-            except CallMatchFail as fail:
-                print(f'\033[91mInvalid syntax: {fail}\033[0m')
+            except CommandMatchFail as fail:
+                if 'error' in fail.command.kwargs:
+                    print(f"\033[91m{fail.command.kwargs['error']}\033[0m")
+                else:
+                    print(f"\033[91mInvalid syntax: {fail}\033[0m")
 
             # `UnknownCommandError` is raised when no command got a match score higher than 0
             # (no element was matched in any of the registered commands)

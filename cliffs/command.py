@@ -8,7 +8,15 @@ from .call_matcher import CallMatcher
 import textwrap
 
 
-class TooManyArguments(CallMatchFail):
+class CommandMatchFail(CallMatchFail):
+    """A call match fail with an associated Command object"""
+
+    def __init__(self, command: 'Command', *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.command = command
+
+
+class TooManyArguments(CommandMatchFail):
     pass
 
 
@@ -29,10 +37,14 @@ class Command:
           * matcher: `CallMatcher` - The matcher to use to match calls against the syntax of this command.
           * description: `str` - The description to include in the usage help message. Ignored if hidden is True.
           * hidden: `bool` - Whether the usage help message should exclude this command entirely.
+
+        All keyword arguments will be saved in `kwargs`.
         """
 
         self.syntax = syntax
         self.callback = callback
+        self.kwargs = kwargs
+
         self.lexer = instance_or_kwargs(kwargs.get('lexer', {}), CallLexer)
         self.matcher = instance_or_kwargs(kwargs.get('matcher', {}), CallMatcher)
         self.description: Optional[str] = kwargs.get('description', None)
@@ -56,7 +68,10 @@ class Command:
             exhausted at the end of the match.
         """
 
-        self.syntax.match(match, self.matcher)
+        try:
+            self.syntax.match(match, self.matcher)
+        except CallMatchFail as e:
+            raise CommandMatchFail(self, e)
 
         if match.has_tokens():
 
@@ -66,7 +81,7 @@ class Command:
                 raise match.hint
 
             # Or we raise the generic error
-            raise TooManyArguments('Too many arguments')
+            raise TooManyArguments(self, 'Too many arguments')
 
     def execute(self, match: CallMatch, callback_args={}) -> object:
         """Executes the command callback with the given match. By default,

@@ -43,7 +43,7 @@ class Literal(Leaf):
           * case_sensitive: `bool` - Whether the literal should be matched respecting
             letter case (defaults to `True`)
           * tolerant: `bool` - Whether the literal should match successfully when
-            match ratio is below the threshold configured in the `CallMatcher`.
+            the match ratio is above the threshold configured in the `CallMatcher`.
             By default, a suggestive exception will be raised.
         """
 
