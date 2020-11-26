@@ -8,15 +8,7 @@ from .call_matcher import CallMatcher
 import textwrap
 
 
-class CommandMatchFail(CallMatchFail):
-    """A call match fail with an associated Command object"""
-
-    def __init__(self, command: 'Command', *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.command = command
-
-
-class TooManyArguments(CommandMatchFail):
+class TooManyArguments(CallMatchFail):
     pass
 
 
@@ -71,17 +63,22 @@ class Command:
         try:
             self.syntax.match(match, self.matcher)
         except CallMatchFail as e:
-            raise CommandMatchFail(self, e)
+            e.command = self
+            raise e
 
         if match.has_tokens():
 
             # Tokens were left in the match, which means some nodes possibly
             # didn't match - we look for a hint in the match and raise it if it exists
             if match.hint is not None:
+                if isinstance(match.hint, CallMatchFail):
+                    match.hint.command = self
                 raise match.hint
 
             # Or we raise the generic error
-            raise TooManyArguments(self, 'Too many arguments')
+            e = TooManyArguments('Too many arguments')
+            e.command = self
+            raise e
 
     def execute(self, match: CallMatch, callback_args={}) -> object:
         """Executes the command callback with the given match. By default,

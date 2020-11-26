@@ -7,6 +7,10 @@ class CallMatchFail(Exception):
     Raised by syntax tree nodes to signal failed parsing to an upper node,
     returned to the top-level caller if parsing fails.
     """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.command = None
 
 
 class CallMatch:

@@ -149,8 +149,8 @@ if __name__ == '__main__':
                     print(f'= {result}')
 
             # `CallMatchFail` is raised when no command fully matched the call
-            # (the error from the best matched command is returned)
-            except CommandMatchFail as fail:
+            # (error from the best matched command is returned)
+            except CallMatchFail as fail:
                 if 'error' in fail.command.kwargs:
                     print(f"\033[91m{fail.command.kwargs['error']}\033[0m")
                 else:

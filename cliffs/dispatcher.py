@@ -112,7 +112,7 @@ class CommandDispatcher:
         """
 
         matches: list[tuple[CallMatch, Command]] = []
-        fails: list[tuple[CallMatchFail, int]] = []
+        fails: list[tuple[CallMatchFail, float]] = []
 
         # Collect matches and fails from commands
         for command in self._commands:
