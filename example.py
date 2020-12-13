@@ -144,7 +144,7 @@ if __name__ == '__main__':
                 command = input('\033[94m> ')
                 print('\033[0m', end='')
 
-                result = cli.dispatch(command, **args)
+                result, _ = cli.dispatch(command, **args)
                 if result is not None:
                     print(f'= {result}')
 

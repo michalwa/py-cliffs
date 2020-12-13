@@ -97,8 +97,8 @@ class Command:
 
         # Pass only those args that are required by the callback signature
         sig = signature(self.callback)
-        callback_args.update({'match': match})
-        callback_args.update(match._params)
+        callback_args |= {'match': match, 'command': self}
+        callback_args |= match._params
         args = dict((p, callback_args[p]) for p in sig.parameters if p in callback_args)
 
         return self.callback(**args)

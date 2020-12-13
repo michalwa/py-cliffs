@@ -61,7 +61,7 @@ class CallMatch:
         self.tokens = other.tokens
         self.score += other.score
         self.terminated |= other.terminated
-        self._params.update(other._params)
+        self._params |= other._params
         self._opts += other._opts
         self._vars += other._vars
         return self

@@ -89,7 +89,7 @@ class CommandDispatcher:
 
         return decorator
 
-    def dispatch(self, call: str, **callback_args) -> Any:
+    def dispatch(self, call: str, **callback_args) -> tuple[Any, Command]:
         """Tries to dispatch the given command calls to the appropriate command.
 
         All keyword arguments will be passed as additional arguments to the
@@ -129,7 +129,7 @@ class CommandDispatcher:
         # Find the match with the highest score and execute it
         if matches != []:
             best_match, matched_command = best(matches, lambda m: m[0].score)
-            return matched_command.execute(best_match, callback_args)
+            return matched_command.execute(best_match, callback_args), matched_command
 
         # If no command successfully matched, raise best scoring fail
         elif fails != []:
